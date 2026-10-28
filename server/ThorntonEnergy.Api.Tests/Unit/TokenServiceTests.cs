@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
-using ThorntonEnergy.Api.Auth;
 using ThorntonEnergy.Api.Models;
 using ThorntonEnergy.Api.Services;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Tests.Unit;
 

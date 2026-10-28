@@ -1,4 +1,4 @@
-namespace ThorntonEnergy.Api.Auth;
+namespace ThorntonEnergy.Shared.Auth;
 
 // Bound from the "Jwt" configuration section (appsettings.json + user secrets locally / app settings in Azure)
 public class JwtOptions

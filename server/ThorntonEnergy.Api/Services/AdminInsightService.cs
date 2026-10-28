@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using ThorntonEnergy.Api.Common;
 using ThorntonEnergy.Api.Data;
 using ThorntonEnergy.Api.Dtos;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Common;
 
 namespace ThorntonEnergy.Api.Services;
 

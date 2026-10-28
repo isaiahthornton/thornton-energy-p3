@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Dtos;
 

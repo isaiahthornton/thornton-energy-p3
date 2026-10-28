@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Models;
 

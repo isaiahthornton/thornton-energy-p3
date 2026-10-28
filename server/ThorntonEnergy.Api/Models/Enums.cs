@@ -6,4 +6,3 @@ public enum MessageTopic { Billing, Outage, Service, Other }
 public enum MessageStatus { New, Read }
 public enum MeterStatus { Active, Inactive, Removed }
 public enum OutageStatus { Reported, InProgress, Resolved }
-public enum UserRole { Customer, Admin }

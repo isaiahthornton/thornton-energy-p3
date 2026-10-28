@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ThorntonEnergy.Api.Auth;
 using ThorntonEnergy.Api.Dtos;
 using ThorntonEnergy.Api.Services;
+using ThorntonEnergy.Shared.Auth;
+using ThorntonEnergy.Shared.Controllers;
 
 namespace ThorntonEnergy.Api.Controllers;
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ThorntonEnergy.Shared.Data;
 
 namespace ThorntonEnergy.Api.Data;
 

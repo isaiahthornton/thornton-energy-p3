@@ -1,0 +1,5 @@
+# Build context is server/, so these patterns cover every project folder
+**/bin/
+**/obj/
+**/*.user
+ThorntonEnergy.Api.Tests/

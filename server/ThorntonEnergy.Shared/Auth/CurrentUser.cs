@@ -1,4 +1,6 @@
-namespace ThorntonEnergy.Api.Auth;
+using Microsoft.AspNetCore.Http;
+
+namespace ThorntonEnergy.Shared.Auth;
 
 // Who is making this request, and what may they see? Services use this for the ownership rules.
 public interface ICurrentUser

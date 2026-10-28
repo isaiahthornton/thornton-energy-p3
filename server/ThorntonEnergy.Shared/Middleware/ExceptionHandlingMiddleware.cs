@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace ThorntonEnergy.Api.Middleware;
+namespace ThorntonEnergy.Shared.Middleware;
 
 // Last line of defence: anything a controller or service did not handle ends up here and becomes
 // a clean JSON error (ProblemDetails) instead of a crash page or a stack trace.

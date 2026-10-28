@@ -1,4 +1,4 @@
-namespace ThorntonEnergy.Api.Data;
+namespace ThorntonEnergy.Shared.Data;
 
 // A thin wrapper over one EF table, so services don't depend on DbContext directly (easy to fake in tests)
 public interface IRepository<T> where T : class

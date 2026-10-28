@@ -1,4 +1,4 @@
-namespace ThorntonEnergy.Api.Common;
+namespace ThorntonEnergy.Shared.Common;
 
 // The ways a service call can end. Controllers turn these into HTTP status codes.
 public enum ResultStatus { Success, NotFound, Unauthorized, Forbidden, Invalid, Conflict }

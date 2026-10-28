@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace ThorntonEnergy.Api.OpenApi;
+namespace ThorntonEnergy.Shared.OpenApi;
 
 // Adds the "Authorize" button to Swagger UI so you can paste a JWT and call protected endpoints
 public class BearerSecuritySchemeTransformer : IOpenApiDocumentTransformer

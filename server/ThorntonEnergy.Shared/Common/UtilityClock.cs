@@ -1,4 +1,6 @@
-namespace ThorntonEnergy.Api.Common;
+using Microsoft.Extensions.Configuration;
+
+namespace ThorntonEnergy.Shared.Common;
 
 // "Now" and "today" as the utility sees them (Eastern time), not the server's clock (Azure runs in UTC).
 // Services use this instead of DateTime.Now so tests can control the time.

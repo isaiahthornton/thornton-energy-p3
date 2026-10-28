@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ThorntonEnergy.Api.Common;
+using ThorntonEnergy.Shared.Common;
 
-namespace ThorntonEnergy.Api.Controllers;
+namespace ThorntonEnergy.Shared.Controllers;
 
 // Controllers only deal with HTTP. The business rules live in the services; this turns a service
 // Result<T> into the matching HTTP response.

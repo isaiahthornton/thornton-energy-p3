@@ -1,14 +1,14 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using ThorntonEnergy.Api.Auth;
-using ThorntonEnergy.Api.Common;
 using ThorntonEnergy.Api.Data;
 using ThorntonEnergy.Api.Dtos;
 using ThorntonEnergy.Api.Mapping;
 using ThorntonEnergy.Api.Models;
 using ThorntonEnergy.Api.Services;
 using ThorntonEnergy.Api.Tests.Helpers;
+using ThorntonEnergy.Shared.Auth;
+using ThorntonEnergy.Shared.Common;
 
 namespace ThorntonEnergy.Api.Tests.Unit;
 

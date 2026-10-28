@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
-namespace ThorntonEnergy.Api.Middleware;
+namespace ThorntonEnergy.Shared.Middleware;
 
 // Gives every request a correlation id (so one request can be followed through the logs and
 // reported back by the browser) and logs method, path, status code and how long it took.

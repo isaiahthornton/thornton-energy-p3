@@ -1,6 +1,4 @@
-using ThorntonEnergy.Api.Models;
-
-namespace ThorntonEnergy.Api.Auth;
+namespace ThorntonEnergy.Shared.Auth;
 
 // Custom claim names in our JWT (standard ones like "sub" and "email" come from JwtRegisteredClaimNames)
 public static class AppClaims
@@ -21,3 +19,5 @@ public static class RateLimitPolicies
 {
     public const string PublicForms = "public-forms"; // login, register, contact form
 }
+
+public enum UserRole { Customer, Admin }

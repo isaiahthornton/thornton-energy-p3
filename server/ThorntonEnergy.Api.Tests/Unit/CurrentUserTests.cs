@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using ThorntonEnergy.Api.Auth;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Tests.Unit;
 

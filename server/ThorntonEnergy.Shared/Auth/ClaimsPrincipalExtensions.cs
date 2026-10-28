@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
-using ThorntonEnergy.Api.Models;
 
-namespace ThorntonEnergy.Api.Auth;
+namespace ThorntonEnergy.Shared.Auth;
 
 // Helpers to read the logged-in user's details from the validated token (the User property in a controller)
 public static class ClaimsPrincipalExtensions

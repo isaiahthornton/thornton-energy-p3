@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using ThorntonEnergy.Api.Data;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Tests.Helpers;
 

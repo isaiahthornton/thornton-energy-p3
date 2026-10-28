@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Data;
 

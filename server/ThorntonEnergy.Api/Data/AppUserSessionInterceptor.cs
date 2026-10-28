@@ -1,6 +1,6 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using ThorntonEnergy.Api.Auth;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Data;
 

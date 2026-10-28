@@ -3,8 +3,8 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using ThorntonEnergy.Api.Auth;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Services;
 
