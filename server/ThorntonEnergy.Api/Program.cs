@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,10 @@ using ThorntonEnergy.Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------- Services (dependency injection) ----------
+
+// Kubernetes Probes Health Checks.
+builder.Services.AddHealthChecks()
+       .AddDbContextCheck<AppDbContext>(tags: ["ready"]); 
 
 // The interceptor tells SQL Server who is signed in, so the audit triggers can record it
 builder.Services.AddScoped<AppUserSessionInterceptor>();
@@ -162,6 +167,12 @@ app.UseRateLimiter();    // 3. Too many attempts? (only endpoints with [EnableRa
 
 app.MapControllers();
 
+/* Health Checking.
+ * Live:  "Is the service awake?"
+ * Ready: "Is the database awake?"
+ */
+app.MapHealthChecks("/health/live", new HealthCheckOptions{Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions{Predicate = check => check.Tags.Contains("ready")}).AllowAnonymous();
 app.Run();
 
 // Lets the test project start the whole app in memory (WebApplicationFactory<Program>)
