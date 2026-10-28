@@ -43,7 +43,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     public async Task Request_WithoutAToken_Returns401()
     {
         // Act
-        var response = await Anonymous().GetAsync("/api/bills");
+        var response = await Anonymous().GetAsync("/api/customers");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -57,7 +57,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "not.a.token");
 
         // Act
-        var response = await client.GetAsync("/api/bills");
+        var response = await client.GetAsync("/api/customers");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -161,92 +161,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    // ---------- authorization: ownership ----------
-
-    [Fact]
-    public async Task Customer_ReadingAnotherCustomersBill_Returns403()
-    {
-        // Arrange: bill 2 belongs to John (customer 2)
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills/2");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_ReadingTheirOwnBill_Returns200()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills/1");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_AskingForAnotherCustomersBillList_Returns403()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills?customerId=2");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_BillList_OnlyContainsTheirOwnBills()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var bills = await jane.GetFromJsonAsync<JsonElement>("/api/bills");
-
-        // Assert
-        Assert.Equal(1, bills.GetArrayLength());
-        Assert.Equal(1, bills[0].GetProperty("customerId").GetInt32());
-    }
-
-    [Fact]
-    public async Task Customer_PayingAnotherCustomersBill_Returns403()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.PatchAsJsonAsync("/api/bills/2", new { status = "paid" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
     // ---------- rules the server enforces ----------
-
-    [Fact]
-    public async Task Customer_OutageReport_IsSavedUnderTheirOwnAccount()
-    {
-        // Arrange: Jane (customer 1) claims to be customer 2 and sends a "resolved" status
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.PostAsJsonAsync("/api/outages",
-            new { customerId = 2, address = "1 Main St", description = "Lights are out", status = "resolved" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var outage = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(1, outage.GetProperty("customerId").GetInt32());
-        Assert.Equal("reported", outage.GetProperty("status").GetString());
-    }
 
     [Fact]
     public async Task Register_WithAMalformedAccountNumber_Returns400()

@@ -1,0 +1,12 @@
+@ThorntonEnergy.Metering.Api_HostAddress = http://localhost:5096
+
+# Needs "Authorization: Bearer <token>" from the monolith's /api/auth/login
+GET {{ThorntonEnergy.Metering.Api_HostAddress}}/api/meters
+Accept: application/json
+
+###
+
+GET {{ThorntonEnergy.Metering.Api_HostAddress}}/api/meterReadings?meterId=1
+Accept: application/json
+
+###

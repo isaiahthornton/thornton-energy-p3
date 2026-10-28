@@ -26,6 +26,13 @@ public class ExceptionHandlingMiddleware(
             await WriteProblemAsync(context, StatusCodes.Status409Conflict, "Conflict",
                 "This record was changed by someone else. Please reload and try again.", ex);
         }
+        catch (Exception ex) when (ex is HttpRequestException || (ex is TaskCanceledException && !context.RequestAborted.IsCancellationRequested))
+        {
+            // Another service we called is down, timed out or answered with an error (see ServiceClients)
+            logger.LogError(ex, "Downstream service failed on {Method} {Path}", context.Request.Method, context.Request.Path);
+            await WriteProblemAsync(context, StatusCodes.Status503ServiceUnavailable, "Service unavailable",
+                "Part of the system is not responding right now. Please try again in a moment.", ex);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception on {Method} {Path}", context.Request.Method, context.Request.Path);

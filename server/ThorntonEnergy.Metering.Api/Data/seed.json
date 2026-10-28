@@ -1,0 +1,262 @@
+{
+  "meters": [
+    {
+      "id": 1,
+      "customerId": 1,
+      "meterNumber": "MTR-5001",
+      "installationDate": "2022-03-14",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "customerId": 2,
+      "meterNumber": "MTR-5002",
+      "installationDate": "2024-06-02",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "customerId": 3,
+      "meterNumber": "MTR-5003",
+      "installationDate": "2019-09-23",
+      "status": "active"
+    },
+    {
+      "id": 4,
+      "customerId": 4,
+      "meterNumber": "MTR-5004",
+      "installationDate": "2026-03-30",
+      "status": "active"
+    }
+  ],
+  "meterReadings": [
+    {
+      "id": 1,
+      "meterId": 1,
+      "readingDate": "2025-10-01",
+      "readingValue": 8800
+    },
+    {
+      "id": 2,
+      "meterId": 1,
+      "readingDate": "2025-11-01",
+      "readingValue": 9320
+    },
+    {
+      "id": 3,
+      "meterId": 1,
+      "readingDate": "2025-12-01",
+      "readingValue": 9930
+    },
+    {
+      "id": 4,
+      "meterId": 1,
+      "readingDate": "2026-01-01",
+      "readingValue": 10710
+    },
+    {
+      "id": 5,
+      "meterId": 1,
+      "readingDate": "2026-02-01",
+      "readingValue": 11550
+    },
+    {
+      "id": 6,
+      "meterId": 1,
+      "readingDate": "2026-03-01",
+      "readingValue": 12310
+    },
+    {
+      "id": 7,
+      "meterId": 1,
+      "readingDate": "2026-04-01",
+      "readingValue": 12910
+    },
+    {
+      "id": 8,
+      "meterId": 1,
+      "readingDate": "2026-05-01",
+      "readingValue": 13420
+    },
+    {
+      "id": 9,
+      "meterId": 1,
+      "readingDate": "2026-06-01",
+      "readingValue": 13980
+    },
+    {
+      "id": 10,
+      "meterId": 1,
+      "readingDate": "2026-07-01",
+      "readingValue": 14700
+    },
+    {
+      "id": 11,
+      "meterId": 1,
+      "readingDate": "2026-08-01",
+      "readingValue": 15590
+    },
+    {
+      "id": 12,
+      "meterId": 1,
+      "readingDate": "2026-09-01",
+      "readingValue": 16450
+    },
+    {
+      "id": 13,
+      "meterId": 1,
+      "readingDate": "2026-10-01",
+      "readingValue": 17090
+    },
+    {
+      "id": 14,
+      "meterId": 2,
+      "readingDate": "2026-06-01",
+      "readingValue": 4100
+    },
+    {
+      "id": 15,
+      "meterId": 2,
+      "readingDate": "2026-07-01",
+      "readingValue": 4580
+    },
+    {
+      "id": 16,
+      "meterId": 2,
+      "readingDate": "2026-08-01",
+      "readingValue": 5230
+    },
+    {
+      "id": 17,
+      "meterId": 2,
+      "readingDate": "2026-09-01",
+      "readingValue": 5860
+    },
+    {
+      "id": 18,
+      "meterId": 2,
+      "readingDate": "2026-10-01",
+      "readingValue": 6360
+    },
+    {
+      "id": 19,
+      "meterId": 3,
+      "readingDate": "2025-10-01",
+      "readingValue": 21400
+    },
+    {
+      "id": 20,
+      "meterId": 3,
+      "readingDate": "2025-11-01",
+      "readingValue": 21830
+    },
+    {
+      "id": 21,
+      "meterId": 3,
+      "readingDate": "2025-12-01",
+      "readingValue": 22300
+    },
+    {
+      "id": 22,
+      "meterId": 3,
+      "readingDate": "2026-01-01",
+      "readingValue": 22860
+    },
+    {
+      "id": 23,
+      "meterId": 3,
+      "readingDate": "2026-02-01",
+      "readingValue": 23450
+    },
+    {
+      "id": 24,
+      "meterId": 3,
+      "readingDate": "2026-03-01",
+      "readingValue": 23990
+    },
+    {
+      "id": 25,
+      "meterId": 3,
+      "readingDate": "2026-04-01",
+      "readingValue": 24440
+    },
+    {
+      "id": 26,
+      "meterId": 3,
+      "readingDate": "2026-05-01",
+      "readingValue": 24840
+    },
+    {
+      "id": 27,
+      "meterId": 3,
+      "readingDate": "2026-06-01",
+      "readingValue": 25260
+    },
+    {
+      "id": 28,
+      "meterId": 3,
+      "readingDate": "2026-07-01",
+      "readingValue": 25760
+    },
+    {
+      "id": 29,
+      "meterId": 3,
+      "readingDate": "2026-08-01",
+      "readingValue": 26370
+    },
+    {
+      "id": 30,
+      "meterId": 3,
+      "readingDate": "2026-09-01",
+      "readingValue": 26950
+    },
+    {
+      "id": 31,
+      "meterId": 3,
+      "readingDate": "2026-10-01",
+      "readingValue": 27410
+    },
+    {
+      "id": 32,
+      "meterId": 4,
+      "readingDate": "2026-04-01",
+      "readingValue": 1200
+    },
+    {
+      "id": 33,
+      "meterId": 4,
+      "readingDate": "2026-05-01",
+      "readingValue": 1890
+    },
+    {
+      "id": 34,
+      "meterId": 4,
+      "readingDate": "2026-06-01",
+      "readingValue": 2630
+    },
+    {
+      "id": 35,
+      "meterId": 4,
+      "readingDate": "2026-07-01",
+      "readingValue": 3510
+    },
+    {
+      "id": 36,
+      "meterId": 4,
+      "readingDate": "2026-08-01",
+      "readingValue": 4530
+    },
+    {
+      "id": 37,
+      "meterId": 4,
+      "readingDate": "2026-09-01",
+      "readingValue": 5510
+    },
+    {
+      "id": 38,
+      "meterId": 4,
+      "readingDate": "2026-10-01",
+      "readingValue": 6270
+    }
+  ]
+}

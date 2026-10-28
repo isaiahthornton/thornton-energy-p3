@@ -1,7 +1,13 @@
 <Solution>
   <Project Path="ThorntonEnergy.Api.Tests/ThorntonEnergy.Api.Tests.csproj" />
   <Project Path="ThorntonEnergy.Api/ThorntonEnergy.Api.csproj" />
+  <Project Path="ThorntonEnergy.Billing.Api.Tests/ThorntonEnergy.Billing.Api.Tests.csproj" />
+  <Project Path="ThorntonEnergy.Billing.Api/ThorntonEnergy.Billing.Api.csproj" />
   <Project Path="ThorntonEnergy.Messages.Api.Tests/ThorntonEnergy.Messages.Api.Tests.csproj" />
   <Project Path="ThorntonEnergy.Messages.Api/ThorntonEnergy.Messages.Api.csproj" />
+  <Project Path="ThorntonEnergy.Metering.Api.Tests/ThorntonEnergy.Metering.Api.Tests.csproj" />
+  <Project Path="ThorntonEnergy.Metering.Api/ThorntonEnergy.Metering.Api.csproj" />
+  <Project Path="ThorntonEnergy.Outages.Api.Tests/ThorntonEnergy.Outages.Api.Tests.csproj" />
+  <Project Path="ThorntonEnergy.Outages.Api/ThorntonEnergy.Outages.Api.csproj" />
   <Project Path="ThorntonEnergy.Shared/ThorntonEnergy.Shared.csproj" />
 </Solution>

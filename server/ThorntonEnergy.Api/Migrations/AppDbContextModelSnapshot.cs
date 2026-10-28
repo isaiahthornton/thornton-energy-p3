@@ -27,25 +27,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.Property<int>("ActiveCustomers")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("AvgKwhLastMonth")
-                        .HasPrecision(18, 1)
-                        .HasColumnType("decimal(18,1)");
-
-                    b.Property<int>("OpenOutages")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("OverdueBalance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("RevenueThisMonth")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnpaidBalance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.ToTable((string)null);
 
                     b.ToView("vw_AdminKpis", (string)null);
@@ -90,108 +71,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AuditLogs");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Bill", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AmountDue")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("EnergyCharge")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int>("KwhUsed")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly?>("PaidDate")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly>("PeriodEnd")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly>("PeriodStart")
-                        .HasColumnType("date");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<decimal>("ServiceCharge")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("Bills", t =>
-                        {
-                            t.HasTrigger("trg_Bills_Audit");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.ContactMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccountNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Topic")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContactMessages");
                 });
 
             modelBuilder.Entity("ThorntonEnergy.Api.Models.Customer", b =>
@@ -252,105 +131,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.ToTable("Customers", t =>
                         {
                             t.HasTrigger("trg_Customers_Audit");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Meter", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("InstallationDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("MeterNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("MeterNumber")
-                        .IsUnique();
-
-                    b.ToTable("Meters");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.MeterReading", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("MeterId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("ReadingDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("ReadingValue")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MeterId");
-
-                    b.ToTable("MeterReadings");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Outage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime>("TimeReported")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("TimeResolved")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("Outages", t =>
-                        {
-                            t.HasTrigger("trg_Outages_Audit");
                         });
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
@@ -419,17 +199,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Bill", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.Customer", "Customer")
-                        .WithMany("Bills")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("ThorntonEnergy.Api.Models.Customer", b =>
                 {
                     b.HasOne("ThorntonEnergy.Api.Models.RatePlan", "RatePlan")
@@ -441,39 +210,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.Navigation("RatePlan");
                 });
 
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Meter", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.Customer", "Customer")
-                        .WithMany("Meters")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.MeterReading", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.Meter", "Meter")
-                        .WithMany("Readings")
-                        .HasForeignKey("MeterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Meter");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Outage", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.Customer", "Customer")
-                        .WithMany("Outages")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("ThorntonEnergy.Api.Models.User", b =>
                 {
                     b.HasOne("ThorntonEnergy.Api.Models.Customer", "Customer")
@@ -481,20 +217,6 @@ namespace ThorntonEnergy.Api.Migrations
                         .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Customer", b =>
-                {
-                    b.Navigation("Bills");
-
-                    b.Navigation("Meters");
-
-                    b.Navigation("Outages");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Meter", b =>
-                {
-                    b.Navigation("Readings");
                 });
 
             modelBuilder.Entity("ThorntonEnergy.Api.Models.RatePlan", b =>

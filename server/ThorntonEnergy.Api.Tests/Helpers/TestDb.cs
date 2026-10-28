@@ -6,17 +6,6 @@ using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Tests.Helpers;
 
-// The real AppDbContext, but SQLite has no SQL Server "rowversion" column, so we tell EF the
-// application sets it (it is just an empty value in tests; the concurrency check is not under test here).
-public sealed class SqliteAppDbContext(DbContextOptions<AppDbContext> options) : AppDbContext(options)
-{
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<Bill>().Property(b => b.RowVersion).ValueGeneratedNever();
-    }
-}
-
 // A throw-away in-memory database for one test (the connection must stay open or SQLite forgets everything)
 public sealed class TestDb : IDisposable
 {
@@ -33,7 +22,7 @@ public sealed class TestDb : IDisposable
     }
 
     public static AppDbContext Create(SqliteConnection connection) =>
-        new SqliteAppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
+        new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
 
     public void Dispose()
     {
@@ -42,7 +31,7 @@ public sealed class TestDb : IDisposable
     }
 }
 
-// A tiny dataset: 1 plan, 2 customers, a login for each (+ an admin), and a few bills and meters
+// A tiny dataset: 1 plan, 2 customers and a login for each (+ an admin)
 public static class TestData
 {
     public const string Password = "password1";
@@ -70,21 +59,6 @@ public static class TestData
             new User { Id = 2, Email = "jane@test.com", PasswordHash = hash, Role = UserRole.Customer, CustomerId = 1 },
             new User { Id = 3, Email = "john@test.com", PasswordHash = hash, Role = UserRole.Customer, CustomerId = 2 });
 
-        db.Bills.AddRange(
-            // Jane: one unpaid bill that is long past due
-            NewBill(1, 1, new DateOnly(2026, 1, 1), BillStatus.Unpaid),
-            // John: one unpaid bill
-            NewBill(2, 2, new DateOnly(2026, 1, 1), BillStatus.Unpaid));
-
-        db.Meters.Add(new Meter { Id = 1, CustomerId = 1, MeterNumber = "M-1", InstallationDate = new DateOnly(2025, 1, 1), Status = MeterStatus.Active });
-        db.MeterReadings.Add(new MeterReading { Id = 1, MeterId = 1, ReadingDate = new DateOnly(2026, 1, 1), ReadingValue = 1000 });
-
         db.SaveChanges();
     }
-
-    private static Bill NewBill(int id, int customerId, DateOnly periodStart, BillStatus status) => new()
-    {
-        Id = id, CustomerId = customerId, PeriodStart = periodStart, PeriodEnd = periodStart.AddDays(30),
-        DueDate = periodStart.AddDays(30 + 21), KwhUsed = 100, EnergyCharge = 10m, ServiceCharge = 10m, AmountDue = 20m, Status = status,
-    };
 }

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ThorntonEnergy.Api.Data;
 using ThorntonEnergy.Api.Dtos;
-using ThorntonEnergy.Api.Models;
 using ThorntonEnergy.Shared.Common;
 
 namespace ThorntonEnergy.Api.Services;
@@ -13,45 +12,50 @@ public interface IAdminInsightService
     Task<Result<List<AuditLogDto>>> GetActivityAsync(int take);
 }
 
-// Reads the numbers the admin dashboard shows. The heavy lifting is done in SQL (a view and a stored procedure),
-// because grouping and summing is what the database is good at. It uses the DbContext directly (not IRepository)
-// because a view and a stored procedure are not entity tables.
-public class AdminInsightService(AppDbContext db) : IAdminInsightService
+// Reads the numbers the admin dashboard shows. Bills and outages live in their own services, so each answer is put
+// together from several places ("API composition"): this database (customers), the Billing service and the Outages
+// service. Angular still calls /api/admin/... and gets the same JSON as before.
+public class AdminInsightService(AppDbContext db, IBillingClient billing, IOutagesClient outages) : IAdminInsightService
 {
     public async Task<Result<AdminKpisDto>> GetKpisAsync()
     {
         var kpis = await db.AdminKpis.AsNoTracking().FirstAsync(); // the view always returns exactly one row
+        var bills = await billing.GetSummaryAsync();
+        var open = await outages.GetSummaryAsync();
+
         return Result<AdminKpisDto>.Success(new AdminKpisDto(
-            kpis.ActiveCustomers, kpis.UnpaidBalance, kpis.OverdueBalance,
-            kpis.RevenueThisMonth, kpis.OpenOutages, kpis.AvgKwhLastMonth));
+            kpis.ActiveCustomers, bills.UnpaidBalance, bills.OverdueBalance,
+            bills.RevenueThisMonth, open.OpenOutages, bills.AvgKwhLastMonth));
     }
 
+    // Usage and billed totals come only from bills, so this is handed straight to the Billing service
     public async Task<Result<List<MonthlyUsageDto>>> GetUsageTrendAsync(int months)
     {
         if (months is < 1 or > 60)
             return Result<List<MonthlyUsageDto>>.Invalid("months must be between 1 and 60.");
 
-        // Calls the stored procedure. The {months} placeholder becomes a SQL parameter, not string concatenation.
-        var rows = await db.Database
-            .SqlQuery<MonthlyUsageRow>($"EXEC dbo.usp_GetMonthlyUsage @Months = {months}")
-            .ToListAsync();
-
-        return Result<List<MonthlyUsageDto>>.Success(
-            rows.Select(r => new MonthlyUsageDto(r.Month, r.TotalKwh, r.TotalBilled)).ToList());
+        return Result<List<MonthlyUsageDto>>.Success(await billing.GetUsageTrendAsync(months));
     }
 
+    // Customer changes from this database, bill changes from Billing, outage changes from Outages: merged, newest first
     public async Task<Result<List<AuditLogDto>>> GetActivityAsync(int take)
     {
         if (take is < 1 or > 200)
             return Result<List<AuditLogDto>>.Invalid("take must be between 1 and 200.");
 
-        var rows = await db.AuditLogs.AsNoTracking()
+        var local = await db.AuditLogs.AsNoTracking()
             .OrderByDescending(a => a.ChangedAt).ThenByDescending(a => a.Id)
             .Take(take)
-            .ToListAsync();
-
-        return Result<List<AuditLogDto>>.Success(rows
             .Select(a => new AuditLogDto(a.Id, a.TableName, a.RecordId, a.ColumnName, a.OldValue, a.NewValue, a.ChangedAt, a.ChangedBy))
+            .ToListAsync();
+        var fromBilling = await billing.GetActivityAsync(take);
+        var fromOutages = await outages.GetActivityAsync(take);
+
+        // Each source already returned its newest "take" rows, so the newest "take" overall are among them.
+        // (Ids come from several databases and can repeat, so Angular tracks the rows by position, not id.)
+        return Result<List<AuditLogDto>>.Success(local.Concat(fromBilling).Concat(fromOutages)
+            .OrderByDescending(a => a.ChangedAt)
+            .Take(take)
             .ToList());
     }
 }

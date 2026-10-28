@@ -29,12 +29,13 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
 // Business rules live in the services (one instance per request, like the DbContext)
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IBillService, BillService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IMeterService, MeterService>();
-builder.Services.AddScoped<IOutageService, OutageService>();
 builder.Services.AddScoped<IRatePlanService, RatePlanService>();
 builder.Services.AddScoped<IAdminInsightService, AdminInsightService>();
+
+// Bills and outages live in their own services; the admin dashboard asks them for their numbers over HTTP
+builder.AddServiceClient<IBillingClient, BillingClient>("Billing");
+builder.AddServiceClient<IOutagesClient, OutagesClient>("Outages");
 
 // AutoMapper copies entities to DTOs and back. The license key is optional (without it, it only logs a reminder).
 builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = builder.Configuration["AutoMapper:LicenseKey"], typeof(MappingProfile));

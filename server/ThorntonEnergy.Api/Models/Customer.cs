@@ -17,7 +17,4 @@ public class Customer
     public decimal? Longitude { get; set; }
 
     [JsonIgnore] public RatePlan RatePlan { get; set; } = null!;
-    [JsonIgnore] public List<Meter> Meters { get; set; } = [];
-    [JsonIgnore] public List<Bill> Bills { get; set; } = [];
-    [JsonIgnore] public List<Outage> Outages { get; set; } = [];
 }
