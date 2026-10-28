@@ -140,8 +140,9 @@ var app = builder.Build();
 // Not in the "Testing" environment: the seeder uses SQL Server IDENTITY_INSERT, and tests seed their own tiny dataset.
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    using IServiceScope scope = app.Services.CreateScope();
+    AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync(); // Create/Update Tables first.
     await DbSeeder.SeedAsync(db, app.Environment.ContentRootPath);
 }
 
@@ -157,7 +158,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Thornton Energy API"));
 }
 
-app.UseHttpsRedirection();
+// In a container, HTTPS is terminated, so the app only speaks HTTP.
+if (!app.Configuration.GetValue<bool>("DOTNET_RUNNING_IN_CONTAINER"))
+    app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
 
