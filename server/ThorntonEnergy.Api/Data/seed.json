@@ -856,27 +856,5 @@
       "timeResolved": null,
       "status": "reported"
     }
-  ],
-  "messages": [
-    {
-      "id": 1,
-      "name": "Jane Doe",
-      "email": "jane@example.com",
-      "topic": "billing",
-      "accountNumber": "TE-100001",
-      "message": "Can I set up autopay for my monthly bill? I couldn't find the option in my account.",
-      "sentAt": "2026-10-05T10:12:00",
-      "status": "new"
-    },
-    {
-      "id": 2,
-      "name": "Robert Chen",
-      "email": "robert@example.com",
-      "topic": "service",
-      "accountNumber": "TE-100004",
-      "message": "I moved in this spring. How do I sign up for online access to see my bills?",
-      "sentAt": "2026-10-07T09:41:00",
-      "status": "new"
-    }
   ]
 }

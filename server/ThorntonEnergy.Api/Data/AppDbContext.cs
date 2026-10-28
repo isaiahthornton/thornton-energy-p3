@@ -11,6 +11,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MeterReading> MeterReadings => Set<MeterReading>();
     public DbSet<Bill> Bills => Set<Bill>();
     public DbSet<Outage> Outages => Set<Outage>();
+    // Messages moved to ThorntonEnergy.Messages.Api. The table stays until its rows are copied to the
+    // ThorntonMessages database; then remove this line and add a migration that drops it.
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<User> Users => Set<User>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

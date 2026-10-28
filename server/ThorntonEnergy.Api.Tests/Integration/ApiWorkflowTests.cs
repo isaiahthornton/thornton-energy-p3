@@ -302,31 +302,6 @@ public class ApiWorkflowTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    // ---------- messages ----------
-
-    [Fact]
-    public async Task Admin_CanReadAndMarkMessagesAsRead()
-    {
-        // Arrange: anyone can send, the server decides the status
-        var anonymous = factory.CreateClient();
-        var sent = await anonymous.PostAsJsonAsync("/api/messages",
-            new { name = "Sam", email = "sam@test.com", topic = "outage", message = "Hello", status = "read" });
-        var sentBody = await sent.Content.ReadFromJsonAsync<JsonElement>();
-        var id = sentBody.GetProperty("id").GetInt32();
-        var admin = await SignedInAsync("admin@test.com");
-
-        // Act
-        var read = await admin.PatchAsJsonAsync($"/api/messages/{id}", new { status = "read" });
-        var one = await admin.GetAsync($"/api/messages/{id}");
-        var all = await admin.GetFromJsonAsync<JsonElement>("/api/messages");
-
-        // Assert
-        Assert.Equal("new", sentBody.GetProperty("status").GetString());
-        Assert.Equal(HttpStatusCode.OK, read.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, one.StatusCode);
-        Assert.True(all.GetArrayLength() >= 1);
-    }
-
     // ---------- registering ----------
 
     [Fact]

@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="ThorntonEnergy.Api.Tests/ThorntonEnergy.Api.Tests.csproj" />
   <Project Path="ThorntonEnergy.Api/ThorntonEnergy.Api.csproj" />
+  <Project Path="ThorntonEnergy.Messages.Api.Tests/ThorntonEnergy.Messages.Api.Tests.csproj" />
+  <Project Path="ThorntonEnergy.Messages.Api/ThorntonEnergy.Messages.Api.csproj" />
   <Project Path="ThorntonEnergy.Shared/ThorntonEnergy.Shared.csproj" />
 </Solution>

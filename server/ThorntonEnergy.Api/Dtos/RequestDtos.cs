@@ -21,13 +21,6 @@ public record CreateOutageRequest(
     [Required, StringLength(200)] string Address,
     [Required, StringLength(1000)] string Description);
 
-public record CreateMessageRequest(
-    [Required, StringLength(100)] string Name,
-    [Required, EmailAddress, StringLength(200)] string Email,
-    MessageTopic Topic,
-    [StringLength(20)] string? AccountNumber,
-    [Required, StringLength(2000)] string Message);
-
 public record RatePlanRequest(
     [Required, StringLength(100)] string Name,
     [Range(0.0001, 100)] decimal PricePerKwh,

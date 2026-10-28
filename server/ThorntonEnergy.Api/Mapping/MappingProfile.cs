@@ -15,14 +15,12 @@ public class MappingProfile : Profile
         CreateMap<Meter, MeterDto>();
         CreateMap<MeterReading, MeterReadingDto>();
         CreateMap<Outage, OutageDto>();
-        CreateMap<ContactMessage, ContactMessageDto>();
         CreateMap<RatePlan, RatePlanDto>();
 
         // request -> entity (what comes in). Server-controlled fields are filled by the services, not by the client.
         CreateMap<CreateBillRequest, Bill>();
         CreateMap<CreateMeterReadingRequest, MeterReading>();
         CreateMap<CreateOutageRequest, Outage>();
-        CreateMap<CreateMessageRequest, ContactMessage>();
         CreateMap<RatePlanRequest, RatePlan>();
     }
 }

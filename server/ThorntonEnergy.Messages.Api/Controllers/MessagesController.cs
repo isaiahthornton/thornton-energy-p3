@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using ThorntonEnergy.Api.Dtos;
-using ThorntonEnergy.Api.Services;
+using ThorntonEnergy.Messages.Api.Dtos;
+using ThorntonEnergy.Messages.Api.Services;
 using ThorntonEnergy.Shared.Auth;
 using ThorntonEnergy.Shared.Controllers;
 
-namespace ThorntonEnergy.Api.Controllers;
+namespace ThorntonEnergy.Messages.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

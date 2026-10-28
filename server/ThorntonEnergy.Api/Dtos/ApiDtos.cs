@@ -20,4 +20,3 @@ public record BillPatch(BillStatus? Status, DateOnly? PaidDate);
 public record CustomerPatch(int? RatePlanId, AccountStatus? Status);
 public record MeterPatch(MeterStatus Status);
 public record OutagePatch(OutageStatus Status, DateTime? TimeResolved);
-public record MessagePatch(MessageStatus Status);

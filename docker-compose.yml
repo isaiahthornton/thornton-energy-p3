@@ -18,7 +18,9 @@ services:
 
   # ---------- .NET API ----------
   api:
-    build: ./server/ThorntonEnergy.Api      # uses the Dockerfile from step 2
+    build:
+      context: ./server                     # server/ so the build can see ThorntonEnergy.Shared too
+      dockerfile: ThorntonEnergy.Api/Dockerfile
     environment:
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonEnergy;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}
@@ -28,11 +30,27 @@ services:
     ports:
       - "8080:8080"                         # optional: call the API directly at localhost:8080
 
+  # ---------- Messages service (first piece split out of the monolith) ----------
+  messages:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Messages.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonMessages
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonMessages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"                         # optional: call the Messages service directly at localhost:8081
+
   # ---------- Angular + nginx ----------
   web:
     build: ./client
     depends_on:
       - api
+      - messages
     ports:
       - "4200:80"                           # open http://localhost:4200
 

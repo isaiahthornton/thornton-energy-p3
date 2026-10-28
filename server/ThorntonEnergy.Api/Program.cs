@@ -33,7 +33,6 @@ builder.Services.AddScoped<IBillService, BillService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IMeterService, MeterService>();
 builder.Services.AddScoped<IOutageService, OutageService>();
-builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IRatePlanService, RatePlanService>();
 builder.Services.AddScoped<IAdminInsightService, AdminInsightService>();
 

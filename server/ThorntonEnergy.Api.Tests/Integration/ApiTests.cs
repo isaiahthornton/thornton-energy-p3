@@ -249,31 +249,6 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task ContactForm_WithABadEmail_Returns400()
-    {
-        // Act
-        var response = await Anonymous().PostAsJsonAsync("/api/messages",
-            new { name = "A", email = "not-an-email", topic = "billing", message = "Hello" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task ContactForm_WithValidData_Returns201_AndOnlyAdminsCanReadTheInbox()
-    {
-        // Act: anyone can send
-        var sent = await Anonymous().PostAsJsonAsync("/api/messages",
-            new { name = "A", email = "a@test.com", topic = "billing", message = "Hello" });
-        var jane = await SignedInAsync("jane@test.com");
-        var janeInbox = await jane.GetAsync("/api/messages");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, sent.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, janeInbox.StatusCode);
-    }
-
-    [Fact]
     public async Task Register_WithAMalformedAccountNumber_Returns400()
     {
         // Act

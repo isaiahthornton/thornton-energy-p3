@@ -21,7 +21,6 @@ public static class DbSeeder
         public List<MeterReading> MeterReadings { get; set; } = [];
         public List<Bill> Bills { get; set; } = [];
         public List<Outage> Outages { get; set; } = [];
-        public List<ContactMessage> Messages { get; set; } = [];
     }
 
     public static async Task SeedAsync(AppDbContext db, string contentRootPath)
@@ -62,7 +61,6 @@ public static class DbSeeder
             await InsertWithIdsAsync(db, seed.MeterReadings);
             await InsertWithIdsAsync(db, seed.Bills);
             await InsertWithIdsAsync(db, seed.Outages);
-            await InsertWithIdsAsync(db, seed.Messages);
             await InsertWithIdsAsync(db, users);
 
             await transaction.CommitAsync();

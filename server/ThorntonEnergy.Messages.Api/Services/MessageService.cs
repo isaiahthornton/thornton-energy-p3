@@ -1,12 +1,11 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using ThorntonEnergy.Api.Data;
-using ThorntonEnergy.Api.Dtos;
-using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Messages.Api.Dtos;
+using ThorntonEnergy.Messages.Api.Models;
 using ThorntonEnergy.Shared.Common;
 using ThorntonEnergy.Shared.Data;
 
-namespace ThorntonEnergy.Api.Services;
+namespace ThorntonEnergy.Messages.Api.Services;
 
 public interface IMessageService
 {

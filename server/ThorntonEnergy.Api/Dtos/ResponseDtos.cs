@@ -16,9 +16,6 @@ public record MeterReadingDto(int Id, int MeterId, DateOnly ReadingDate, int Rea
 public record OutageDto(int Id, int CustomerId, string Address, string Description, DateTime TimeReported,
     DateTime? TimeResolved, OutageStatus Status);
 
-public record ContactMessageDto(int Id, string Name, string Email, MessageTopic Topic, string? AccountNumber,
-    string Message, DateTime SentAt, MessageStatus Status);
-
 public record RatePlanDto(int Id, string Name, decimal PricePerKwh, decimal MonthlyFee, string Description);
 
 // Admin insight (dashboard numbers and the activity feed)
