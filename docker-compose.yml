@@ -26,6 +26,7 @@ services:
       Jwt__Key: ${JWT_KEY}
       Services__Billing: "http://billing:8080"   # the admin dashboard asks Billing for the bill numbers
       Services__Outages: "http://outages:8080"   # ...and Outages for the outage numbers
+      Services__Customers: "http://customers:8080"   # login/register (service token) and the customer numbers
     depends_on:
       db:
         condition: service_healthy          # wait for SQL Server to be ready before starting
@@ -71,7 +72,7 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonBilling
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonBilling;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
-      Services__Customers: "http://api:8080"   # customers and rate plans still live in the monolith
+      Services__Customers: "http://customers:8080"   # customers and rate plans (for pricing new bills)
     depends_on:
       db:
         condition: service_healthy
@@ -87,12 +88,27 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonOutages
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonOutages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
-      Services__Customers: "http://api:8080"   # customer names and map locations still live in the monolith
+      Services__Customers: "http://customers:8080"   # customer names and map locations
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8084:8080"                         # optional: call the Outages service directly at localhost:8084
+
+  # ---------- Customers service (customers and their rate plans) ----------
+  customers:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Customers.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonCustomers
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonCustomers;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so its login tokens and service tokens are accepted here
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8085:8080"                         # optional: call the Customers service directly at localhost:8085
 
   # ---------- Angular + nginx ----------
   web:
@@ -103,6 +119,7 @@ services:
       - metering
       - billing
       - outages
+      - customers
     ports:
       - "4200:80"                           # open http://localhost:4200
 

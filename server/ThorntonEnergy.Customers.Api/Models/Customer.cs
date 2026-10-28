@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace ThorntonEnergy.Api.Models;
+namespace ThorntonEnergy.Customers.Api.Models;
 
+// Customers and their rate plans live together in this service, so the RatePlanId foreign key is a real one.
+// Other services refer to a customer only by Id.
 public class Customer
 {
     public int Id { get; set; }
@@ -18,3 +20,5 @@ public class Customer
 
     [JsonIgnore] public RatePlan RatePlan { get; set; } = null!;
 }
+
+public enum AccountStatus { Active, Inactive, Suspended, Closed }

@@ -43,7 +43,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     public async Task Request_WithoutAToken_Returns401()
     {
         // Act
-        var response = await Anonymous().GetAsync("/api/customers");
+        var response = await Anonymous().GetAsync("/api/auth/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -57,7 +57,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "not.a.token");
 
         // Act
-        var response = await client.GetAsync("/api/customers");
+        var response = await client.GetAsync("/api/auth/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -110,7 +110,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var jane = await SignedInAsync("jane@test.com");
 
         // Act
-        var response = await jane.GetAsync("/api/customers");
+        var response = await jane.GetAsync("/api/admin/activity");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -122,13 +122,11 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         // Arrange
         var admin = await SignedInAsync("admin@test.com");
 
-        // Act
-        var response = await admin.GetAsync("/api/customers");
+        // Act: the activity feed is put together from the (fake) services and this API's own history table
+        var response = await admin.GetAsync("/api/admin/activity");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var customers = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(2, customers.GetArrayLength());
     }
 
     // The admin insight endpoints read a SQL Server view and procedure, which SQLite does not have.
@@ -149,16 +147,6 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, asCustomer.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
-    }
-
-    [Fact]
-    public async Task RatePlans_ArePublic()
-    {
-        // Act: no token at all
-        var response = await Anonymous().GetAsync("/api/ratePlans");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // ---------- rules the server enforces ----------

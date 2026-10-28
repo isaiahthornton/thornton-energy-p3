@@ -5,7 +5,7 @@ using ThorntonEnergy.Outages.Api.Models;
 namespace ThorntonEnergy.Outages.Api.Services;
 
 // What Outages needs to know about customers, which another service owns ("Services:Customers" in configuration;
-// today that is the monolith). An interface, so tests can use a fake instead of HTTP.
+// the Customers service, which owns customers and their rate plans). An interface, so tests can use a fake instead of HTTP.
 public interface ICustomerDirectory
 {
     // Does this customer exist? (an admin reporting an outage on someone's behalf)

@@ -1,13 +1,12 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using ThorntonEnergy.Api.Data;
-using ThorntonEnergy.Api.Dtos;
-using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Customers.Api.Dtos;
+using ThorntonEnergy.Customers.Api.Models;
 using ThorntonEnergy.Shared.Auth;
 using ThorntonEnergy.Shared.Common;
 using ThorntonEnergy.Shared.Data;
 
-namespace ThorntonEnergy.Api.Services;
+namespace ThorntonEnergy.Customers.Api.Services;
 
 public interface ICustomerService
 {

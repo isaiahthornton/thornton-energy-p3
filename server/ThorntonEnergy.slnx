@@ -3,6 +3,8 @@
   <Project Path="ThorntonEnergy.Api/ThorntonEnergy.Api.csproj" />
   <Project Path="ThorntonEnergy.Billing.Api.Tests/ThorntonEnergy.Billing.Api.Tests.csproj" />
   <Project Path="ThorntonEnergy.Billing.Api/ThorntonEnergy.Billing.Api.csproj" />
+  <Project Path="ThorntonEnergy.Customers.Api.Tests/ThorntonEnergy.Customers.Api.Tests.csproj" />
+  <Project Path="ThorntonEnergy.Customers.Api/ThorntonEnergy.Customers.Api.csproj" />
   <Project Path="ThorntonEnergy.Messages.Api.Tests/ThorntonEnergy.Messages.Api.Tests.csproj" />
   <Project Path="ThorntonEnergy.Messages.Api/ThorntonEnergy.Messages.Api.csproj" />
   <Project Path="ThorntonEnergy.Metering.Api.Tests/ThorntonEnergy.Metering.Api.Tests.csproj" />

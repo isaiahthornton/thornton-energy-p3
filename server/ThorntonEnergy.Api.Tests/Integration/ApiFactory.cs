@@ -39,7 +39,11 @@ public class ApiFactory : WebApplicationFactory<Program>
             _connection.Open();
             services.AddScoped<AppDbContext>(_ => TestDb.Create(_connection));
 
-            // No HTTP calls to the Billing or Outages services in tests
+            // No HTTP calls to the Customers, Billing or Outages services in tests
+            services.RemoveAll<ICustomerAccounts>();
+            services.AddSingleton<ICustomerAccounts, FakeCustomerAccounts>();
+            services.RemoveAll<ICustomersClient>();
+            services.AddSingleton<ICustomersClient, FakeCustomersClient>();
             services.RemoveAll<IBillingClient>();
             services.AddSingleton<IBillingClient, FakeBillingClient>();
             services.RemoveAll<IOutagesClient>();

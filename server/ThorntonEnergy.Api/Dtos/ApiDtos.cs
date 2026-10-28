@@ -16,4 +16,3 @@ public record UserResponse(int Id, string Email, UserRole Role, int? CustomerId)
 public record AuthResponse(string Token, DateTime ExpiresAt, UserResponse User);  // AuthResponse in Angular
 
 // PATCH bodies: only the fields Angular actually changes
-public record CustomerPatch(int? RatePlanId, AccountStatus? Status);

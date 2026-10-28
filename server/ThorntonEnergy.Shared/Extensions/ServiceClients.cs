@@ -10,24 +10,31 @@ public static class ServiceClients
 {
     // Registers a typed HttpClient for another service. Its address comes from "Services:<name>" in configuration
     // (appsettings.json for dotnet run, Services__<name> in docker-compose / Kubernetes).
-    // The caller's own JWT is passed along, so the other service applies the same user's roles and ownership rules.
-    public static IHttpClientBuilder AddServiceClient<TClient, TImplementation>(this WebApplicationBuilder builder, string serviceName)
+    // By default the caller's own JWT is passed along, so the other service applies the same user's roles and ownership
+    // rules. Pass forwardCallerToken: false when the call happens before anyone is signed in, and add your own handler.
+    public static IHttpClientBuilder AddServiceClient<TClient, TImplementation>(
+        this WebApplicationBuilder builder, string serviceName, bool forwardCallerToken = true)
         where TClient : class
         where TImplementation : class, TClient
     {
         var baseUrl = builder.Configuration[$"Services:{serviceName}"]
             ?? throw new InvalidOperationException($"Services:{serviceName} is missing. Set it in appsettings.json or Services__{serviceName}.");
 
-        builder.Services.AddHttpContextAccessor();
-        builder.Services.AddTransient<ForwardAuthorizationHandler>();
-
-        return builder.Services
-            .AddHttpClient<TClient, TImplementation>(client =>
+        var client = builder.Services
+            .AddHttpClient<TClient, TImplementation>(http =>
             {
-                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"); // trailing slash, so "api/..." is appended, not replaced
-                client.Timeout = TimeSpan.FromSeconds(30);                  // a paused Azure SQL behind the other service can take a while
-            })
-            .AddHttpMessageHandler<ForwardAuthorizationHandler>();
+                http.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"); // trailing slash, so "api/..." is appended, not replaced
+                http.Timeout = TimeSpan.FromSeconds(30);                  // a paused Azure SQL behind the other service can take a while
+            });
+
+        if (forwardCallerToken)
+        {
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddTransient<ForwardAuthorizationHandler>();
+            client.AddHttpMessageHandler<ForwardAuthorizationHandler>();
+        }
+
+        return client;
     }
 }
 

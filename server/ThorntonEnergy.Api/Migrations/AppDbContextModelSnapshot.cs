@@ -22,16 +22,6 @@ namespace ThorntonEnergy.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.AdminKpis", b =>
-                {
-                    b.Property<int>("ActiveCustomers")
-                        .HasColumnType("int");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_AdminKpis", (string)null);
-                });
-
             modelBuilder.Entity("ThorntonEnergy.Api.Models.AuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -73,98 +63,6 @@ namespace ThorntonEnergy.Api.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Customer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RatePlanId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ServiceAddress")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountNumber")
-                        .IsUnique();
-
-                    b.HasIndex("RatePlanId");
-
-                    b.ToTable("Customers", t =>
-                        {
-                            t.HasTrigger("trg_Customers_Audit");
-                        });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.RatePlan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MonthlyFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("PricePerKwh")
-                        .HasPrecision(10, 4)
-                        .HasColumnType("decimal(10,4)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RatePlans");
-                });
-
             modelBuilder.Entity("ThorntonEnergy.Api.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -197,31 +95,6 @@ namespace ThorntonEnergy.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.Customer", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.RatePlan", "RatePlan")
-                        .WithMany("Customers")
-                        .HasForeignKey("RatePlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("RatePlan");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.User", b =>
-                {
-                    b.HasOne("ThorntonEnergy.Api.Models.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId");
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("ThorntonEnergy.Api.Models.RatePlan", b =>
-                {
-                    b.Navigation("Customers");
                 });
 #pragma warning restore 612, 618
         }

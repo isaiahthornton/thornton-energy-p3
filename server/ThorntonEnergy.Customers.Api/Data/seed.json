@@ -1,0 +1,79 @@
+{
+  "ratePlans": [
+    {
+      "id": 1,
+      "name": "Standard",
+      "pricePerKwh": 0.18,
+      "monthlyFee": 20,
+      "description": "Flat rate, any time of day"
+    },
+    {
+      "id": 2,
+      "name": "Time-of-Use",
+      "pricePerKwh": 0.15,
+      "monthlyFee": 15,
+      "description": "Cheaper nights and weekends"
+    },
+    {
+      "id": 3,
+      "name": "Green Energy",
+      "pricePerKwh": 0.21,
+      "monthlyFee": 12.5,
+      "description": "100% renewable energy"
+    }
+  ],
+  "customers": [
+    {
+      "id": 1,
+      "accountNumber": "TE-100001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phone": "609-555-0101",
+      "email": "jane@example.com",
+      "serviceAddress": "12 Maple Ave, East Windsor, NJ",
+      "ratePlanId": 1,
+      "status": "active",
+      "latitude": 40.27,
+      "longitude": -74.53
+    },
+    {
+      "id": 2,
+      "accountNumber": "TE-100002",
+      "firstName": "John",
+      "lastName": "Smith",
+      "phone": "609-555-0202",
+      "email": "john@example.com",
+      "serviceAddress": "45 Oak St, East Windsor, NJ",
+      "ratePlanId": 2,
+      "status": "active",
+      "latitude": 40.2735,
+      "longitude": -74.5262
+    },
+    {
+      "id": 3,
+      "accountNumber": "TE-100003",
+      "firstName": "Maria",
+      "lastName": "Garcia",
+      "phone": "609-555-0303",
+      "email": "maria@example.com",
+      "serviceAddress": "8 Brainerd Lake Rd, Cranbury, NJ",
+      "ratePlanId": 3,
+      "status": "active",
+      "latitude": 40.2668,
+      "longitude": -74.5341
+    },
+    {
+      "id": 4,
+      "accountNumber": "TE-100004",
+      "firstName": "Robert",
+      "lastName": "Chen",
+      "phone": "609-555-0404",
+      "email": "robert@example.com",
+      "serviceAddress": "221 Gordon Rd, Robbinsville, NJ",
+      "ratePlanId": 1,
+      "status": "active",
+      "latitude": 40.2712,
+      "longitude": -74.5385
+    }
+  ]
+}

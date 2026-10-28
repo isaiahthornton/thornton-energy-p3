@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ThorntonEnergy.Api.Models;
+namespace ThorntonEnergy.Customers.Api.Models;
 
 public class RatePlan
 {

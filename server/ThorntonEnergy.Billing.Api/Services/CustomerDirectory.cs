@@ -5,7 +5,7 @@ using ThorntonEnergy.Billing.Api.Models;
 namespace ThorntonEnergy.Billing.Api.Services;
 
 // What Billing needs to know about customers, which another service owns ("Services:Customers" in configuration;
-// today that is the monolith). An interface, so tests can use a fake instead of HTTP.
+// the Customers service, which owns customers and their rate plans). An interface, so tests can use a fake instead of HTTP.
 public interface ICustomerDirectory
 {
     // The prices of the customer's current rate plan, or null if there is no such customer

@@ -44,6 +44,20 @@ public class TokenServiceTests
     }
 
     [Fact]
+    public void CreateServiceToken_HasTheServiceRole_NoPersonalClaims_AndExpiresAfterFiveMinutes()
+    {
+        // Act
+        var serviceToken = CreateService().CreateServiceToken();
+        var token = new JsonWebTokenHandler().ReadJsonWebToken(serviceToken.Token);
+
+        // Assert: only [Authorize(Roles = "Service")] accepts it, and it can never pass an ownership check
+        Assert.Equal(AppRoles.Service, token.GetClaim(AppClaims.Role).Value);
+        Assert.False(token.TryGetClaim(JwtRegisteredClaimNames.Email, out _));
+        Assert.False(token.TryGetClaim(AppClaims.CustomerId, out _));
+        Assert.Equal(Now.UtcDateTime.AddMinutes(5), serviceToken.ExpiresAt);
+    }
+
+    [Fact]
     public void CreateToken_AdminHasNoCustomerIdClaim()
     {
         // Arrange

@@ -15,8 +15,6 @@ public static class DbSeeder
     private class SeedFile
     {
         public List<SeedUser> Users { get; set; } = [];
-        public List<RatePlan> RatePlans { get; set; } = [];
-        public List<Customer> Customers { get; set; } = [];
     }
 
     public static async Task SeedAsync(AppDbContext db, string contentRootPath)
@@ -50,9 +48,7 @@ public static class DbSeeder
             db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync();
 
-            // Parents before children, so every foreign key already exists
-            await InsertWithIdsAsync(db, seed.RatePlans);
-            await InsertWithIdsAsync(db, seed.Customers);
+            // (Each user's customer is seeded by the Customers service, with the same ids)
             await InsertWithIdsAsync(db, users);
 
             await transaction.CommitAsync();

@@ -31,27 +31,14 @@ public sealed class TestDb : IDisposable
     }
 }
 
-// A tiny dataset: 1 plan, 2 customers and a login for each (+ an admin)
+// A tiny dataset: an admin and a login for customers 1 (Jane) and 2 (John).
+// The customers themselves live in the Customers service; tests use FakeCustomerAccounts instead.
 public static class TestData
 {
     public const string Password = "password1";
 
     public static void Seed(AppDbContext db)
     {
-        db.RatePlans.Add(new RatePlan { Id = 1, Name = "Standard", PricePerKwh = 0.10m, MonthlyFee = 10m, Description = "Test plan" });
-
-        db.Customers.AddRange(
-            new Customer
-            {
-                Id = 1, AccountNumber = "TE-100001", FirstName = "Jane", LastName = "Doe", Phone = "1", Email = "jane@test.com",
-                ServiceAddress = "1 Main St", RatePlanId = 1, Status = AccountStatus.Active,
-            },
-            new Customer
-            {
-                Id = 2, AccountNumber = "TE-100002", FirstName = "John", LastName = "Smith", Phone = "2", Email = "john@test.com",
-                ServiceAddress = "2 Main St", RatePlanId = 1, Status = AccountStatus.Active,
-            });
-
         // Low work factor so tests stay fast
         var hash = BCrypt.Net.BCrypt.HashPassword(Password, workFactor: 4);
         db.Users.AddRange(

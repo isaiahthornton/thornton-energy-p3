@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using ThorntonEnergy.Api.Data;
-using ThorntonEnergy.Api.Mapping;
 using ThorntonEnergy.Api.Services;
 using ThorntonEnergy.Shared.Data;
 using ThorntonEnergy.Shared.Extensions;
@@ -12,13 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 // /health/ready checks this service's database
 builder.AddDatabaseHealthCheck<AppDbContext>();
 
-// The interceptor tells SQL Server who is signed in, so the audit triggers can record it
-builder.Services.AddScoped<AppUserSessionInterceptor>();
-builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+// Logins (Users) and the audit history from before the split. No triggers left, so no session interceptor.
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-            builder.Configuration.GetConnectionString("DefaultConnection"),
-            sql => sql.EnableRetryOnFailure()) // Azure SQL auto-pauses; retry while it wakes up
-        .AddInterceptors(serviceProvider.GetRequiredService<AppUserSessionInterceptor>()));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.EnableRetryOnFailure())); // Azure SQL auto-pauses; retry while it wakes up
 
 builder.Services.AddSingleton<ITokenService, TokenService>(); // stateless, so one instance for the whole app
 
@@ -29,16 +26,19 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
 // Business rules live in the services (one instance per request, like the DbContext)
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IRatePlanService, RatePlanService>();
 builder.Services.AddScoped<IAdminInsightService, AdminInsightService>();
 
-// Bills and outages live in their own services; the admin dashboard asks them for their numbers over HTTP
+// Customers, bills and outages live in their own services; the admin dashboard asks them for their numbers over HTTP
+// (passing along the admin's token)
+builder.AddServiceClient<ICustomersClient, CustomersClient>("Customers");
 builder.AddServiceClient<IBillingClient, BillingClient>("Billing");
 builder.AddServiceClient<IOutagesClient, OutagesClient>("Outages");
 
-// AutoMapper copies entities to DTOs and back. The license key is optional (without it, it only logs a reminder).
-builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = builder.Configuration["AutoMapper:LicenseKey"], typeof(MappingProfile));
+// Login and register check the customer's account before anyone is signed in, so there is no user token to pass along:
+// these calls carry a short-lived service token instead
+builder.Services.AddTransient<ServiceTokenHandler>();
+builder.AddServiceClient<ICustomerAccounts, CustomerAccountsClient>("Customers", forwardCallerToken: false)
+    .AddHttpMessageHandler<ServiceTokenHandler>();
 
 builder.AddRateLimiting();
 builder.AddAPIDefaults();
