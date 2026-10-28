@@ -3,3 +3,8 @@ node_modules
 CLAUDE.md
 AGENTS.md
 .mcp.json
+.env
+bin/
+obj/
+dist/
+*.user
