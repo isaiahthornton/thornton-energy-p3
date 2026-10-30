@@ -3,11 +3,11 @@
 resources:
   - ../base
 images:
-  - { name: thornton-db,        newName: CHRIS_DOCKERHUB/thornton-db,            newTag: "1.0" }
-  - { name: thornton-api,       newName: SEBASTIAN_DOCKERHUB/thornton-api,       newTag: "1.0" }
-  - { name: thornton-customers, newName: SEBASTIAN_DOCKERHUB/thornton-customers, newTag: "1.0" }
-  - { name: thornton-billing,   newName: SEBASTIAN_DOCKERHUB/thornton-billing,   newTag: "1.0" }
-  - { name: thornton-outages,   newName: SEBASTIAN_DOCKERHUB/thornton-outages,   newTag: "1.0" }
-  - { name: thornton-metering,  newName: SEBASTIAN_DOCKERHUB/thornton-metering,  newTag: "1.0" }
-  - { name: thornton-messages,  newName: SEBASTIAN_DOCKERHUB/thornton-messages,  newTag: "1.0" }
-  - { name: thornton-web,       newName: MICHAEL_DOCKERHUB/thornton-web,         newTag: "1.0" }
+  - { name: thornton-db,        newName: michaelgeo29/thornton-db,        newTag: "1.0" }
+  - { name: thornton-api,       newName: michaelgeo29/thornton-api,       newTag: "1.0" }
+  - { name: thornton-customers, newName: michaelgeo29/thornton-customers, newTag: "1.0" }
+  - { name: thornton-billing,   newName: michaelgeo29/thornton-billing,   newTag: "1.0" }
+  - { name: thornton-outages,   newName: michaelgeo29/thornton-outages,   newTag: "1.0" }
+  - { name: thornton-metering,  newName: michaelgeo29/thornton-metering,  newTag: "1.0" }
+  - { name: thornton-messages,  newName: michaelgeo29/thornton-messages,  newTag: "1.0" }
+  - { name: thornton-web,       newName: michaelgeo29/thornton-web,       newTag: "1.0" }
