@@ -1,0 +1,12 @@
+# Docker Desktop Kubernetes: use the images "docker compose build" already made on this laptop.
+resources:
+  - ../base
+images:
+  - { name: thornton-db,        newName: mcr.microsoft.com/mssql/server, newTag: 2022-latest }
+  - { name: thornton-api,       newName: thornton_energy_p3-api,       newTag: latest }
+  - { name: thornton-customers, newName: thornton_energy_p3-customers, newTag: latest }
+  - { name: thornton-billing,   newName: thornton_energy_p3-billing,   newTag: latest }
+  - { name: thornton-outages,   newName: thornton_energy_p3-outages,   newTag: latest }
+  - { name: thornton-metering,  newName: thornton_energy_p3-metering,  newTag: latest }
+  - { name: thornton-messages,  newName: thornton_energy_p3-messages,  newTag: latest }
+  - { name: thornton-web,       newName: thornton_energy_p3-web,       newTag: latest }

@@ -1,0 +1,60 @@
+# ---------- Customers and rate plans (everyone depends on it; scale to 2 after first start) ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customers
+  labels: { app: customers }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: customers }
+  template:
+    metadata:
+      labels: { app: customers }
+    spec:
+      containers:
+        - name: customers
+          image: thornton-customers
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            # Secrets come from the "thornton-secrets" Secret, never from files in git
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: SQL_PASSWORD }
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: JWT_KEY }
+            # $(SQL_PASSWORD) is filled in by Kubernetes from the variable above
+            - name: ConnectionStrings__DefaultConnection
+              value: "Server=db,1433;Database=ThorntonCustomers;User Id=sa;Password=$(SQL_PASSWORD);TrustServerCertificate=True"
+            - name: Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command
+              value: "Warning"
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 512Mi }
+          # First start creates and seeds the database, so give it up to 3 minutes before other checks begin
+          startupProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 36
+          # Restart the pod if the app stops answering
+          livenessProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            periodSeconds: 20
+          # Only send traffic once the app can reach its own database
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 8080 }
+            periodSeconds: 10
+---
+# The name "customers" matches the compose service name, so nginx.conf works unchanged
+apiVersion: v1
+kind: Service
+metadata:
+  name: customers
+spec:
+  selector: { app: customers }
+  ports:
+    - port: 8080
+      targetPort: 8080
