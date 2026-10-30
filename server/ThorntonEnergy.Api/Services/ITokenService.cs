@@ -8,4 +8,7 @@ public record AuthToken(string Token, DateTime ExpiresAt);
 public interface ITokenService
 {
     AuthToken CreateToken(User user);
+
+    // A short-lived token with the "Service" role, for calls to other services before anyone is signed in
+    AuthToken CreateServiceToken();
 }

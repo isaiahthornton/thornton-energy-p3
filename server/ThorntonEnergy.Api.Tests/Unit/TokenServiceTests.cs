@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
-using ThorntonEnergy.Api.Auth;
 using ThorntonEnergy.Api.Models;
 using ThorntonEnergy.Api.Services;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Tests.Unit;
 
@@ -41,6 +41,20 @@ public class TokenServiceTests
         Assert.Equal("Customer", token.GetClaim(AppClaims.Role).Value);
         Assert.Equal("3", token.GetClaim(AppClaims.CustomerId).Value);
         Assert.Equal("test-issuer", token.Issuer);
+    }
+
+    [Fact]
+    public void CreateServiceToken_HasTheServiceRole_NoPersonalClaims_AndExpiresAfterFiveMinutes()
+    {
+        // Act
+        var serviceToken = CreateService().CreateServiceToken();
+        var token = new JsonWebTokenHandler().ReadJsonWebToken(serviceToken.Token);
+
+        // Assert: only [Authorize(Roles = "Service")] accepts it, and it can never pass an ownership check
+        Assert.Equal(AppRoles.Service, token.GetClaim(AppClaims.Role).Value);
+        Assert.False(token.TryGetClaim(JwtRegisteredClaimNames.Email, out _));
+        Assert.False(token.TryGetClaim(AppClaims.CustomerId, out _));
+        Assert.Equal(Now.UtcDateTime.AddMinutes(5), serviceToken.ExpiresAt);
     }
 
     [Fact]

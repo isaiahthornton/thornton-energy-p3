@@ -1,0 +1,15 @@
+@ThorntonEnergy.Messages.Api_HostAddress = http://localhost:5095
+
+# Public: anyone can send a contact message
+POST {{ThorntonEnergy.Messages.Api_HostAddress}}/api/messages
+Content-Type: application/json
+
+{ "name": "Sam", "email": "sam@example.com", "topic": "billing", "message": "Hello" }
+
+###
+
+# Admin only: needs "Authorization: Bearer <token>" from the monolith's /api/auth/login
+GET {{ThorntonEnergy.Messages.Api_HostAddress}}/api/messages
+Accept: application/json
+
+###

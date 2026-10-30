@@ -13,7 +13,8 @@
       <tr><th>When</th><th>Record</th><th>What changed</th><th>Change</th><th>By</th></tr>
     </thead>
     <tbody>
-      @for (e of entries(); track e.id) {
+      <!-- track by position: entries come from two services' databases, so ids can repeat -->
+      @for (e of entries(); track $index) {
         <tr>
           <td>{{ e.changedAt | date: 'MMM d, h:mm a' }}</td>
           <td>{{ recordLabel(e) }}</td>

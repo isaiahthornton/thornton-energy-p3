@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
 
 namespace ThorntonEnergy.Api.Data;
 
@@ -14,13 +15,6 @@ public static class DbSeeder
     private class SeedFile
     {
         public List<SeedUser> Users { get; set; } = [];
-        public List<RatePlan> RatePlans { get; set; } = [];
-        public List<Customer> Customers { get; set; } = [];
-        public List<Meter> Meters { get; set; } = [];
-        public List<MeterReading> MeterReadings { get; set; } = [];
-        public List<Bill> Bills { get; set; } = [];
-        public List<Outage> Outages { get; set; } = [];
-        public List<ContactMessage> Messages { get; set; } = [];
     }
 
     public static async Task SeedAsync(AppDbContext db, string contentRootPath)
@@ -54,14 +48,7 @@ public static class DbSeeder
             db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync();
 
-            // Parents before children, so every foreign key already exists
-            await InsertWithIdsAsync(db, seed.RatePlans);
-            await InsertWithIdsAsync(db, seed.Customers);
-            await InsertWithIdsAsync(db, seed.Meters);
-            await InsertWithIdsAsync(db, seed.MeterReadings);
-            await InsertWithIdsAsync(db, seed.Bills);
-            await InsertWithIdsAsync(db, seed.Outages);
-            await InsertWithIdsAsync(db, seed.Messages);
+            // (Each user's customer is seeded by the Customers service, with the same ids)
             await InsertWithIdsAsync(db, users);
 
             await transaction.CommitAsync();

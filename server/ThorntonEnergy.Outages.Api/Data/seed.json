@@ -1,0 +1,49 @@
+{
+  "outages": [
+    {
+      "id": 1,
+      "customerId": 1,
+      "address": "12 Maple Ave, East Windsor, NJ",
+      "description": "Power out after storm, whole street dark",
+      "timeReported": "2026-08-14T19:42:00",
+      "timeResolved": "2026-08-14T23:10:00",
+      "status": "resolved"
+    },
+    {
+      "id": 2,
+      "customerId": 1,
+      "address": "12 Maple Ave, East Windsor, NJ",
+      "description": "Lights flickering and partial outage in kitchen and garage",
+      "timeReported": "2026-10-06T08:15:00",
+      "timeResolved": null,
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "customerId": 2,
+      "address": "45 Oak St, East Windsor, NJ",
+      "description": "Transformer noise and brief outage",
+      "timeReported": "2026-09-20T13:05:00",
+      "timeResolved": "2026-09-20T16:30:00",
+      "status": "resolved"
+    },
+    {
+      "id": 4,
+      "customerId": 3,
+      "address": "8 Brainerd Lake Rd, Cranbury, NJ",
+      "description": "Tree branch on the line behind the house, power out on the whole block",
+      "timeReported": "2026-07-02T17:20:00",
+      "timeResolved": "2026-07-02T22:05:00",
+      "status": "resolved"
+    },
+    {
+      "id": 5,
+      "customerId": 4,
+      "address": "221 Gordon Rd, Robbinsville, NJ",
+      "description": "Power went out around 8pm, neighbors across the street still have lights",
+      "timeReported": "2026-10-07T20:30:00",
+      "timeResolved": null,
+      "status": "reported"
+    }
+  ]
+}

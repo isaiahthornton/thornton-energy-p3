@@ -43,7 +43,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     public async Task Request_WithoutAToken_Returns401()
     {
         // Act
-        var response = await Anonymous().GetAsync("/api/bills");
+        var response = await Anonymous().GetAsync("/api/auth/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -57,7 +57,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "not.a.token");
 
         // Act
-        var response = await client.GetAsync("/api/bills");
+        var response = await client.GetAsync("/api/auth/me");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -110,7 +110,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var jane = await SignedInAsync("jane@test.com");
 
         // Act
-        var response = await jane.GetAsync("/api/customers");
+        var response = await jane.GetAsync("/api/admin/activity");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -122,13 +122,11 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         // Arrange
         var admin = await SignedInAsync("admin@test.com");
 
-        // Act
-        var response = await admin.GetAsync("/api/customers");
+        // Act: the activity feed is put together from the (fake) services and this API's own history table
+        var response = await admin.GetAsync("/api/admin/activity");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var customers = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(2, customers.GetArrayLength());
     }
 
     // The admin insight endpoints read a SQL Server view and procedure, which SQLite does not have.
@@ -151,127 +149,7 @@ public class ApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
     }
 
-    [Fact]
-    public async Task RatePlans_ArePublic()
-    {
-        // Act: no token at all
-        var response = await Anonymous().GetAsync("/api/ratePlans");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    // ---------- authorization: ownership ----------
-
-    [Fact]
-    public async Task Customer_ReadingAnotherCustomersBill_Returns403()
-    {
-        // Arrange: bill 2 belongs to John (customer 2)
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills/2");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_ReadingTheirOwnBill_Returns200()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills/1");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_AskingForAnotherCustomersBillList_Returns403()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.GetAsync("/api/bills?customerId=2");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Customer_BillList_OnlyContainsTheirOwnBills()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var bills = await jane.GetFromJsonAsync<JsonElement>("/api/bills");
-
-        // Assert
-        Assert.Equal(1, bills.GetArrayLength());
-        Assert.Equal(1, bills[0].GetProperty("customerId").GetInt32());
-    }
-
-    [Fact]
-    public async Task Customer_PayingAnotherCustomersBill_Returns403()
-    {
-        // Arrange
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.PatchAsJsonAsync("/api/bills/2", new { status = "paid" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
     // ---------- rules the server enforces ----------
-
-    [Fact]
-    public async Task Customer_OutageReport_IsSavedUnderTheirOwnAccount()
-    {
-        // Arrange: Jane (customer 1) claims to be customer 2 and sends a "resolved" status
-        var jane = await SignedInAsync("jane@test.com");
-
-        // Act
-        var response = await jane.PostAsJsonAsync("/api/outages",
-            new { customerId = 2, address = "1 Main St", description = "Lights are out", status = "resolved" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var outage = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(1, outage.GetProperty("customerId").GetInt32());
-        Assert.Equal("reported", outage.GetProperty("status").GetString());
-    }
-
-    [Fact]
-    public async Task ContactForm_WithABadEmail_Returns400()
-    {
-        // Act
-        var response = await Anonymous().PostAsJsonAsync("/api/messages",
-            new { name = "A", email = "not-an-email", topic = "billing", message = "Hello" });
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task ContactForm_WithValidData_Returns201_AndOnlyAdminsCanReadTheInbox()
-    {
-        // Act: anyone can send
-        var sent = await Anonymous().PostAsJsonAsync("/api/messages",
-            new { name = "A", email = "a@test.com", topic = "billing", message = "Hello" });
-        var jane = await SignedInAsync("jane@test.com");
-        var janeInbox = await jane.GetAsync("/api/messages");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, sent.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, janeInbox.StatusCode);
-    }
 
     [Fact]
     public async Task Register_WithAMalformedAccountNumber_Returns400()

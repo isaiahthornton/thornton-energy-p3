@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using ThorntonEnergy.Api.Common;
 using ThorntonEnergy.Api.Data;
 using ThorntonEnergy.Api.Dtos;
 using ThorntonEnergy.Api.Models;
+using ThorntonEnergy.Shared.Auth;
+using ThorntonEnergy.Shared.Common;
+using ThorntonEnergy.Shared.Data;
 
 namespace ThorntonEnergy.Api.Services;
 
@@ -14,16 +16,14 @@ public interface IAuthService
 
 public class AuthService(
     IRepository<User> users,
-    IRepository<Customer> customers,
+    ICustomerAccounts accounts, // customers live in the Customers service; asked with a service token
     ITokenService tokens,
     ILogger<AuthService> logger) : IAuthService
 {
     // Check the password, then hand back a signed JWT
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request)
     {
-        var user = await users.Query()
-            .Include(u => u.Customer)
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+        var user = await users.Query().FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
@@ -33,10 +33,16 @@ public class AuthService(
         }
 
         // Suspended or closed customers cannot sign in. The server enforces this, not just the browser.
-        if (user.Customer is not null && user.Customer.Status != AccountStatus.Active)
+        // (Admins have no customer account, so they skip the call and can sign in even if Customers is down.)
+        if (user.CustomerId is int customerId)
         {
-            logger.LogWarning("Login blocked for {Email}: account is {Status}", request.Email, user.Customer.Status);
-            return Result<AuthResponse>.Forbidden(AccountNotActiveMessage(user.Customer.Status));
+            var account = await accounts.GetAsync(customerId);
+            var status = account?.Status ?? AccountStatus.Closed; // a login whose customer no longer exists counts as closed
+            if (status != AccountStatus.Active)
+            {
+                logger.LogWarning("Login blocked for {Email}: account is {Status}", request.Email, status);
+                return Result<AuthResponse>.Forbidden(AccountNotActiveMessage(status));
+            }
         }
 
         logger.LogInformation("User {UserId} signed in", user.Id);
@@ -46,8 +52,7 @@ public class AuthService(
     // Link a new login to an existing customer, then sign them in
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request)
     {
-        var customer = await customers.Query().FirstOrDefaultAsync(c =>
-            c.AccountNumber == request.AccountNumber && c.Email == request.Email);
+        var customer = await accounts.FindAsync(request.AccountNumber, request.Email);
         if (customer is null)
             return Result<AuthResponse>.NotFound("Customer not found with provided account number and email.");
 

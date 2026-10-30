@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using ThorntonEnergy.Api.Data;
+using ThorntonEnergy.Api.Services;
 using ThorntonEnergy.Api.Tests.Helpers;
 
 namespace ThorntonEnergy.Api.Tests.Integration;
@@ -37,6 +38,16 @@ public class ApiFactory : WebApplicationFactory<Program>
             // ...and put in one that talks to the shared in-memory SQLite connection
             _connection.Open();
             services.AddScoped<AppDbContext>(_ => TestDb.Create(_connection));
+
+            // No HTTP calls to the Customers, Billing or Outages services in tests
+            services.RemoveAll<ICustomerAccounts>();
+            services.AddSingleton<ICustomerAccounts, FakeCustomerAccounts>();
+            services.RemoveAll<ICustomersClient>();
+            services.AddSingleton<ICustomersClient, FakeCustomersClient>();
+            services.RemoveAll<IBillingClient>();
+            services.AddSingleton<IBillingClient, FakeBillingClient>();
+            services.RemoveAll<IOutagesClient>();
+            services.AddSingleton<IOutagesClient, FakeOutagesClient>();
         });
     }
 

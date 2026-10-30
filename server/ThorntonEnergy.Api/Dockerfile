@@ -1,15 +1,19 @@
+# Build context is server/ (see docker-compose.yml), so both the API and the Shared library are visible.
+
 # ---------- Stage 1: build (SDK image has the compiler) ----------
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy only the .csproj first and restore NuGet packages.
-# Docker caches each step, so packages are only re-downloaded when the .csproj changes.
-COPY ThorntonEnergy.Api.csproj .
-RUN dotnet restore
+# Copy only the .csproj files first and restore NuGet packages.
+# Docker caches each step, so packages are only re-downloaded when a .csproj changes.
+COPY ThorntonEnergy.Shared/ThorntonEnergy.Shared.csproj ThorntonEnergy.Shared/
+COPY ThorntonEnergy.Api/ThorntonEnergy.Api.csproj ThorntonEnergy.Api/
+RUN dotnet restore ThorntonEnergy.Api/ThorntonEnergy.Api.csproj
 
-# Now copy the rest of the source and compile a Release build into /app
-COPY . .
-RUN dotnet publish -c Release -o /app --no-restore
+# Now copy the source of both projects and compile a Release build into /app
+COPY ThorntonEnergy.Shared/ ThorntonEnergy.Shared/
+COPY ThorntonEnergy.Api/ ThorntonEnergy.Api/
+RUN dotnet publish ThorntonEnergy.Api/ThorntonEnergy.Api.csproj -c Release -o /app --no-restore
 
 # ---------- Stage 2: run (small runtime image, no SDK) ----------
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

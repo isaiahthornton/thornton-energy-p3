@@ -18,25 +18,122 @@ services:
 
   # ---------- .NET API ----------
   api:
-    build: ./server/ThorntonEnergy.Api      # builds from server/ThorntonEnergy.Api/Dockerfile
+    build:
+      context: ./server                     # server/ so the build can see ThorntonEnergy.Shared too
+      dockerfile: ThorntonEnergy.Api/Dockerfile
     environment:
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonEnergy;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+      Services__Billing: "http://billing:8080"   # the admin dashboard asks Billing for the bill numbers
+      Services__Outages: "http://outages:8080"   # ...and Outages for the outage numbers
+      Services__Customers: "http://customers:8080"   # login/register (service token) and the customer numbers
     depends_on:
       db:
         condition: service_healthy          # wait for SQL Server to be ready before starting
     ports:
       - "${API_PORT:-8080}:8080"                         # optional: call the API directly at localhost:8080
 
+  # ---------- Messages service (first piece split out of the monolith) ----------
+  messages:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Messages.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonMessages
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonMessages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"                         # optional: call the Messages service directly at localhost:8081
+
+  # ---------- Metering service (meters and meter readings) ----------
+  metering:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Metering.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonMetering
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonMetering;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8082:8080"                         # optional: call the Metering service directly at localhost:8082
+
+  # ---------- Billing service (bills, plus the billing numbers for the admin dashboard) ----------
+  billing:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Billing.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonBilling
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonBilling;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+      Services__Customers: "http://customers:8080"   # customers and rate plans (for pricing new bills)
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8083:8080"                         # optional: call the Billing service directly at localhost:8083
+
+  # ---------- Outages service (outage reports, the outage map, and the outage numbers for the dashboard) ----------
+  outages:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Outages.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonOutages
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonOutages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+      Services__Customers: "http://customers:8080"   # customer names and map locations
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8084:8080"                         # optional: call the Outages service directly at localhost:8084
+
+  # ---------- Customers service (customers and their rate plans) ----------
+  customers:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Customers.Api/Dockerfile
+    environment:
+      # Same SQL Server container, but its own database: no other service touches ThorntonCustomers
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonCustomers;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}                  # same key as the api, so its login tokens and service tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8085:8080"                         # optional: call the Customers service directly at localhost:8085
+
   # ---------- Angular + nginx ----------
   web:
     build: ./client
     depends_on:
       - api
+      - messages
+      - metering
+      - billing
+      - outages
+      - customers
     ports:
-      - "${WEB_PORT:-4200}:80"                           # open http://localhost:4200 (change with WEB_PORT)
+      - "${WEB_PORT:-4200}:80"                           # open http://localhost:4200
 
 volumes:
   sqldata:
