@@ -4,9 +4,9 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: "Y"                      # required by Microsoft's image
-      MSSQL_SA_PASSWORD: ${SQL_PASSWORD}    # from .env
+      MSSQL_SA_PASSWORD: ${SQL_PASSWORD:?Set SQL_PASSWORD in your .env file}    # from .env
     ports:
-      - "14330:1433"                        # optional: lets SSMS on your PC connect to localhost,14330
+      - "${DB_PORT:-14330}:1433"                        # optional: lets SSMS on your PC connect to localhost,14330
     volumes:
       - sqldata:/var/opt/mssql              # keep the data when the container is removed
     healthcheck:                            # "healthy" once SQL Server answers a query
@@ -23,7 +23,9 @@ services:
       dockerfile: ThorntonEnergy.Api/Dockerfile
     environment:
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonEnergy;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
-      Jwt__Key: ${JWT_KEY}
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
       Services__Billing: "http://billing:8080"   # the admin dashboard asks Billing for the bill numbers
       Services__Outages: "http://outages:8080"   # ...and Outages for the outage numbers
       Services__Customers: "http://customers:8080"   # login/register (service token) and the customer numbers
@@ -31,7 +33,7 @@ services:
       db:
         condition: service_healthy          # wait for SQL Server to be ready before starting
     ports:
-      - "8080:8080"                         # optional: call the API directly at localhost:8080
+      - "${API_PORT:-8080}:8080"                         # optional: call the API directly at localhost:8080
 
   # ---------- Messages service (first piece split out of the monolith) ----------
   messages:
@@ -42,6 +44,8 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonMessages
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonMessages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +61,8 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonMetering
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonMetering;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
     depends_on:
       db:
         condition: service_healthy
@@ -72,6 +78,8 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonBilling
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonBilling;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
       Services__Customers: "http://customers:8080"   # customers and rate plans (for pricing new bills)
     depends_on:
       db:
@@ -88,6 +96,8 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonOutages
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonOutages;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so the api's login tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
       Services__Customers: "http://customers:8080"   # customer names and map locations
     depends_on:
       db:
@@ -104,6 +114,8 @@ services:
       # Same SQL Server container, but its own database: no other service touches ThorntonCustomers
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=ThorntonCustomers;User Id=sa;Password=${SQL_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}                  # same key as the api, so its login tokens and service tokens are accepted here
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
     depends_on:
       db:
         condition: service_healthy
@@ -121,7 +133,7 @@ services:
       - outages
       - customers
     ports:
-      - "4200:80"                           # open http://localhost:4200
+      - "${WEB_PORT:-4200}:80"                           # open http://localhost:4200
 
 volumes:
   sqldata:
