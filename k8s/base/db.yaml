@@ -1,0 +1,69 @@
+# ---------- SQL Server: one copy, with its own disk ----------
+# The disk (PersistentVolumeClaim) keeps the 6 databases when the pod restarts,
+# like the "sqldata" volume in docker-compose.yml.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqldata
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  labels: { app: db }
+spec:
+  replicas: 1                      # a database is stateful: never more than one copy here
+  strategy:
+    type: Recreate                 # stop the old pod before starting a new one (they can't share the disk)
+  selector:
+    matchLabels: { app: db }
+  template:
+    metadata:
+      labels: { app: db }
+    spec:
+      securityContext:
+        fsGroup: 10001             # SQL Server runs as user 10001; lets it write to the disk on AKS
+      containers:
+        - name: db
+          image: thornton-db
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: SQL_PASSWORD }
+          resources:
+            requests: { cpu: 250m, memory: 2Gi }   # SQL Server will not start with less than 2 GB
+            limits: { memory: 3Gi }
+          readinessProbe:          # same check as the compose healthcheck
+            exec:
+              command: ["/bin/sh", "-c", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\""]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: sqldata
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: sqldata
+          persistentVolumeClaim:
+            claimName: sqldata
+---
+# The name "db" is what every connection string uses (Server=db,1433), same as in compose.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector: { app: db }
+  ports:
+    - port: 1433
+      targetPort: 1433

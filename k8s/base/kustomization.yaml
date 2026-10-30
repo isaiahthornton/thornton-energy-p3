@@ -1,0 +1,12 @@
+# The list of files that make up the app. "kubectl apply -k" reads this.
+namespace: thornton
+resources:
+  - namespace.yaml
+  - db.yaml
+  - api.yaml
+  - customers.yaml
+  - billing.yaml
+  - outages.yaml
+  - metering.yaml
+  - messages.yaml
+  - web.yaml

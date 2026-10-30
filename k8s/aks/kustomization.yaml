@@ -1,0 +1,13 @@
+# Azure Kubernetes Service: pull the versioned images from the three Docker Hub accounts.
+# Replace the three account names once each owner has pushed their images (public repos).
+resources:
+  - ../base
+images:
+  - { name: thornton-db,        newName: CHRIS_DOCKERHUB/thornton-db,            newTag: "1.0" }
+  - { name: thornton-api,       newName: SEBASTIAN_DOCKERHUB/thornton-api,       newTag: "1.0" }
+  - { name: thornton-customers, newName: SEBASTIAN_DOCKERHUB/thornton-customers, newTag: "1.0" }
+  - { name: thornton-billing,   newName: SEBASTIAN_DOCKERHUB/thornton-billing,   newTag: "1.0" }
+  - { name: thornton-outages,   newName: SEBASTIAN_DOCKERHUB/thornton-outages,   newTag: "1.0" }
+  - { name: thornton-metering,  newName: SEBASTIAN_DOCKERHUB/thornton-metering,  newTag: "1.0" }
+  - { name: thornton-messages,  newName: SEBASTIAN_DOCKERHUB/thornton-messages,  newTag: "1.0" }
+  - { name: thornton-web,       newName: MICHAEL_DOCKERHUB/thornton-web,         newTag: "1.0" }

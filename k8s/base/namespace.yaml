@@ -1,0 +1,5 @@
+# Everything for the project lives in its own namespace, like a folder inside the cluster.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: thornton
