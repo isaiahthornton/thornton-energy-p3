@@ -6,11 +6,15 @@ Same app as `docker-compose.yml`, described for Kubernetes. One set of files in 
 | Piece | Copies | Reached at |
 |---|---|---|
 | db (SQL Server + 8 GB disk) | 1 | `db:1433` inside the cluster only |
-| api, customers, billing, outages, metering, messages | 1 each (customers scaled to 2 after first start) | `<name>:8080` inside the cluster only |
+| api, customers, billing, outages, metering, messages, chat | 1 each (customers scaled to 2 after first start) | `<name>:8080` inside the cluster only |
 | web (Angular + nginx) | 2 | the only public address (LoadBalancer) |
 
 Service names match compose, so `client/nginx.conf` and every connection string work unchanged.
-Secrets are never in git: they are created from your local `.env`.
+Secrets are never in git: they are created from your local `.env`. For chat,
+the secret must also contain `FOUNDRY_ENDPOINT`, `FOUNDRY_AGENT_ID`, and
+`FOUNDRY_API_KEY` from the Foundry owner; see [CHAT-SETUP.md](../docs/CHAT-SETUP.md).
+The chat readiness probe stays unhealthy until the configured HTTPS endpoint
+and agent ID are present.
 
 ## Run on Docker Desktop Kubernetes
 

@@ -9,4 +9,5 @@ images:
   - { name: thornton-outages,   newName: thornton_energy_p3-outages,   newTag: latest }
   - { name: thornton-metering,  newName: thornton_energy_p3-metering,  newTag: latest }
   - { name: thornton-messages,  newName: thornton_energy_p3-messages,  newTag: latest }
+  - { name: thornton-chat,      newName: thornton_energy_p3-chat,       newTag: latest }
   - { name: thornton-web,       newName: thornton_energy_p3-web,       newTag: latest }

@@ -1,0 +1,517 @@
+openapi: 3.0.1
+info:
+  title: Thornton Energy Customer Service API
+  version: 1.0.0
+  description: >-
+    OpenAPI tools for the authenticated customer's account, meters, bills, and
+    outage reports. Before importing this file into Azure AI Foundry, replace
+    the server URL with the application's public HTTPS origin. The supplied
+    *.hcp.centralus.azmk8s.io address is the AKS control-plane endpoint, not
+    the application API endpoint. The Kubernetes deployment currently exposes
+    the web service on port 80; configure a public HTTPS endpoint and TLS for
+    Foundry before use.
+
+    Protected operations require the authenticated customer's existing JWT as
+    an Authorization: Bearer token. Configure Foundry to forward a
+    customer-specific token per user. Do not configure one shared customer JWT
+    for all users; server-side ownership checks use the token to scope data.
+    If Foundry's selected authentication mode cannot provide each user's
+    application JWT, use a secure token broker or compatible authentication
+    layer rather than a shared customer token.
+    The API's login endpoint is intentionally not exposed as a tool, so the
+    agent should not collect or store customer passwords.
+
+    For account lookup, call getCurrentUser first and use its customerId for
+    getCustomer. For meter selection, call listMeters and present its results
+    for the user to select. Meter records do not include an address; the
+    customer's profile has one serviceAddress. For bills, listBills provides
+    amounts and statuses; there is no separate customer-scoped balance
+    endpoint. markBillPaid only changes a bill's status to paid; this API does
+    not process a card, bank transfer, or other payment. reportOutage creates
+    an outage record for the authenticated customer; require explicit user
+    confirmation before invoking it. Customer meter-reading submission is
+    not exposed because the existing POST endpoint is admin-only.
+servers:
+  - url: https://replace-with-public-application-host
+    description: Replace with the application's public HTTPS origin (no path).
+tags:
+  - name: Account
+  - name: Meters
+  - name: Billing
+  - name: Outages
+security:
+  - customerJwt: []
+paths:
+  /api/auth/me:
+    get:
+      tags: [Account]
+      operationId: getCurrentUser
+      summary: Get the authenticated user's identity
+      description: >-
+        Returns the customerId from the validated bearer token. Use this
+        customerId to retrieve the account profile; do not ask the customer for
+        an ID that this operation can provide.
+      responses:
+        '200':
+          description: Authenticated user identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/customers/{id}:
+    get:
+      tags: [Account]
+      operationId: getCustomer
+      summary: Get the authenticated customer's account profile
+      description: Only the authenticated customer's own profile is accessible to customer accounts.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Use customerId returned by getCurrentUser.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Customer account profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/meters:
+    get:
+      tags: [Meters]
+      operationId: listMeters
+      summary: List the authenticated customer's meters
+      description: >-
+        Customer requests are automatically limited to the caller's own meters.
+        Present the returned meter identifiers and numbers as numbered choices
+        when the user needs to select a meter. Meter records do not contain a
+        service address.
+      responses:
+        '200':
+          description: Customer's meters, newest installation first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/meterReadings:
+    get:
+      tags: [Meters]
+      operationId: listMeterReadings
+      summary: List the authenticated customer's meter readings
+      description: >-
+        Customer requests are limited to readings from the caller's own meters.
+        To retrieve readings for a selected meter, pass its id from listMeters.
+        This operation only retrieves readings; customer-submitted readings are
+        not supported by the current API.
+      parameters:
+        - name: meterId
+          in: query
+          required: false
+          description: Optional meter id from listMeters.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Meter readings, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeterReading'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/bills:
+    get:
+      tags: [Billing]
+      operationId: listBills
+      summary: List the authenticated customer's bills
+      description: >-
+        Customer requests are automatically limited to the caller's own bills.
+        Use the returned amountDue and status values to answer billing
+        questions. This API has no separate customer-scoped balance endpoint.
+      responses:
+        '200':
+          description: Customer's bills, newest billing period first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bill'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/bills/{id}:
+    get:
+      tags: [Billing]
+      operationId: getBill
+      summary: Get a bill by its id
+      description: Only the authenticated customer's own bill is accessible to customer accounts.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Bill details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Billing]
+      operationId: markBillPaid
+      summary: Mark the authenticated customer's bill as paid
+      description: >-
+        This only changes the bill status; it does not initiate or verify a
+        financial transaction. Select a bill returned by listBills and obtain
+        the customer's explicit confirmation before calling this operation.
+        The server sets the payment date. A bill already paid cannot be paid
+        again.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkBillPaidRequest'
+      responses:
+        '200':
+          description: Bill status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/outages:
+    get:
+      tags: [Outages]
+      operationId: listOutages
+      summary: List the authenticated customer's outage reports
+      description: Customer requests are automatically limited to the caller's own outage reports.
+      responses:
+        '200':
+          description: Customer's outage reports, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Outage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Outages]
+      operationId: reportOutage
+      summary: Report an outage for the authenticated customer
+      description: >-
+        Creates an outage report on the caller's account; the server derives
+        the customer id from the bearer token. Do not send customerId. Collect
+        the affected address and outage details before calling. Obtain explicit
+        user confirmation before creating the report.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportOutageRequest'
+      responses:
+        '201':
+          description: Outage report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Outage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+components:
+  securitySchemes:
+    customerJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Customer-specific JWT issued by the application's authentication service.
+  responses:
+    BadRequest:
+      description: The request is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing, expired, or invalid customer JWT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The authenticated caller is not allowed to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: The requested state conflicts with the current resource state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    User:
+      type: object
+      required: [id, email, role, customerId]
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [customer, admin]
+        customerId:
+          type: integer
+          format: int32
+          nullable: true
+    Customer:
+      type: object
+      required:
+        - id
+        - accountNumber
+        - firstName
+        - lastName
+        - phone
+        - email
+        - serviceAddress
+        - ratePlanId
+        - status
+      properties:
+        id:
+          type: integer
+          format: int32
+        accountNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        serviceAddress:
+          type: string
+        ratePlanId:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum: [active, inactive, suspended, closed]
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+    Meter:
+      type: object
+      required: [id, customerId, meterNumber, installationDate, status]
+      properties:
+        id:
+          type: integer
+          format: int32
+        customerId:
+          type: integer
+          format: int32
+        meterNumber:
+          type: string
+        installationDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, inactive, removed]
+    MeterReading:
+      type: object
+      required: [id, meterId, readingDate, readingValue]
+      properties:
+        id:
+          type: integer
+          format: int32
+        meterId:
+          type: integer
+          format: int32
+        readingDate:
+          type: string
+          format: date
+        readingValue:
+          type: integer
+          format: int32
+    Bill:
+      type: object
+      required:
+        - id
+        - customerId
+        - periodStart
+        - periodEnd
+        - dueDate
+        - kwhUsed
+        - amountDue
+        - status
+        - energyCharge
+        - serviceCharge
+      properties:
+        id:
+          type: integer
+          format: int32
+        customerId:
+          type: integer
+          format: int32
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        kwhUsed:
+          type: integer
+          format: int32
+        amountDue:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [unpaid, paid, overdue]
+        energyCharge:
+          type: number
+          format: double
+        serviceCharge:
+          type: number
+          format: double
+        paidDate:
+          type: string
+          format: date
+          nullable: true
+    MarkBillPaidRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [paid]
+          description: Must be paid. The server sets paidDate to its current date.
+        paidDate:
+          type: string
+          format: date
+          nullable: true
+          description: Omit this field; the server controls the payment date.
+    Outage:
+      type: object
+      required: [id, customerId, address, description, timeReported, status]
+      properties:
+        id:
+          type: integer
+          format: int32
+        customerId:
+          type: integer
+          format: int32
+        address:
+          type: string
+        description:
+          type: string
+        timeReported:
+          type: string
+          format: date-time
+        timeResolved:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [reported, in_progress, resolved]
+    ReportOutageRequest:
+      type: object
+      required: [address, description]
+      properties:
+        address:
+          type: string
+          maxLength: 200
+          description: Affected service address selected or confirmed by the customer.
+        description:
+          type: string
+          maxLength: 1000
+          description: Outage details, including duration when known.
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
