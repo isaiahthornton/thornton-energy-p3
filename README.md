@@ -44,6 +44,7 @@ Inside the API, a request flows through layers, each with one job:
 `middleware -> authentication -> authorization -> controller -> service -> repository -> DbContext -> SQL`
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a file-by-file map and the data model.
+Customer chat setup and Foundry adapter requirements: [docs/CHAT-SETUP.md](docs/CHAT-SETUP.md).
 
 ## Tech stack
 
@@ -64,6 +65,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a file-by-file map and the 
 - Usage history chart from meter readings
 - Billing history with bill detail and **Pay Now**
 - Report an outage and follow its status
+- Authenticated customer chat with streaming answers and explicit outage confirmation
 - Rate plan comparison with an estimate for this customer's real usage, and one-click plan switch
 
 **Admin portal (`/admin`)**
@@ -88,6 +90,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a file-by-file map and the 
 - **Validation:** request DTOs use Data Annotations; bad input returns 400.
 - **Errors:** unhandled exceptions become a clean JSON problem response with a correlation id (`X-Correlation-ID`); stack traces appear only in Development.
 - **Secrets:** never in git. Locally they live in .NET user secrets; in Azure they are App Service settings (`Jwt__Key`, the connection string).
+- **AI chat:** `/account/chat` is customer-only; the in-memory transcript is not persisted. Foundry endpoint/agent values and credentials are deployment-owned and must be configured before the chat service becomes ready.
 - **Why JWT in a header and not a cookie:** the front end and the API are different sites (two subdomains of `azurewebsites.net`, which is on the public suffix list), so cookies would be third-party cookies that browsers increasingly block. A bearer token sent by the Angular interceptor works across both sites and is not exposed to cross-site request forgery. The trade-off is that the token is kept in `sessionStorage` (cleared when the tab closes), so we rely on Angular's output escaping and the short token lifetime.
 
 ## Run it locally

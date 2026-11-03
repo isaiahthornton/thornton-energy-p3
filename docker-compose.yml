@@ -52,6 +52,28 @@ services:
     ports:
       - "8081:8080"                         # optional: call the Messages service directly at localhost:8081
 
+  # ---------- Authenticated customer chat ----------
+  chat:
+    build:
+      context: ./server
+      dockerfile: ThorntonEnergy.Chat.Api/Dockerfile
+    environment:
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in your .env file}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Foundry__Endpoint: ${FOUNDRY_ENDPOINT:-}
+      Foundry__AgentId: ${FOUNDRY_AGENT_ID:-}
+      Foundry__ApiKey: ${FOUNDRY_API_KEY:-}
+      Services__Customers: "http://customers:8080"
+      Services__Metering: "http://metering:8080"
+      Services__Billing: "http://billing:8080"
+      Services__Outages: "http://outages:8080"
+    depends_on:
+      - customers
+      - metering
+      - billing
+      - outages
+    # Reachable only through the web container's /api/chat proxy.
+
   # ---------- Metering service (meters and meter readings) ----------
   metering:
     build:
@@ -132,6 +154,7 @@ services:
       - billing
       - outages
       - customers
+      - chat
     ports:
       - "${WEB_PORT:-4200}:80"                           # open http://localhost:4200
 

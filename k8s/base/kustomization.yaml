@@ -9,4 +9,5 @@ resources:
   - outages.yaml
   - metering.yaml
   - messages.yaml
+  - chat.yaml
   - web.yaml

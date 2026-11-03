@@ -1,0 +1,65 @@
+# ---------- Customer chat microservice: internal-only, customer JWT required ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat
+  labels: { app: chat }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: chat }
+  template:
+    metadata:
+      labels: { app: chat }
+    spec:
+      containers:
+        - name: chat
+          image: thornton-chat
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: JWT_KEY }
+            - name: Foundry__Endpoint
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: FOUNDRY_ENDPOINT }
+            - name: Foundry__AgentId
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: FOUNDRY_AGENT_ID }
+            - name: Foundry__ApiKey
+              valueFrom:
+                secretKeyRef: { name: thornton-secrets, key: FOUNDRY_API_KEY }
+            - name: Services__Customers
+              value: "http://customers:8080"
+            - name: Services__Metering
+              value: "http://metering:8080"
+            - name: Services__Billing
+              value: "http://billing:8080"
+            - name: Services__Outages
+              value: "http://outages:8080"
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 512Mi }
+          startupProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 8080 }
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat
+spec:
+  type: ClusterIP
+  selector: { app: chat }
+  ports:
+    - port: 8080
+      targetPort: 8080
