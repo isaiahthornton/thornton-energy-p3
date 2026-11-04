@@ -59,7 +59,7 @@ services:
 
   # ---------- Authenticated customer chat ----------
   chat:
-    image: isaiahthornton/thornton-chat:1.1   # published on Docker Hub; 'build' below makes the same image locally
+    image: isaiahthornton/thornton-chat:1.2   # published on Docker Hub; 'build' below makes the same image locally
     build:
       context: ./server
       dockerfile: ThorntonEnergy.Chat.Api/Dockerfile
@@ -156,7 +156,7 @@ services:
 
   # ---------- Angular + nginx ----------
   web:
-    image: isaiahthornton/thornton-web:1.1   # published on Docker Hub; 'build' below makes the same image locally
+    image: isaiahthornton/thornton-web:1.2   # published on Docker Hub; 'build' below makes the same image locally
     build: ./client
     depends_on:
       - api

@@ -168,7 +168,7 @@ internal static class ToolDefinitions
         Tool("get_bills", "Read bills belonging to the authenticated customer. This does not initiate payment.", new { type = "object", properties = new { }, additionalProperties = false }),
         RatePlansTool,
         Tool("get_outages", "Read outage reports belonging to the authenticated customer.", new { type = "object", properties = new { }, additionalProperties = false }),
-        Tool("report_outage", "Create an outage report only after the customer explicitly confirms the exact address and description.", new
+        Tool("report_outage", "Start an outage report for the customer. Call it as soon as you have the address and a short description. The customer then sees a Yes button, and nothing is filed until they tap it, so do not ask for a typed confirmation.", new
         {
             type = "object",
             properties = new

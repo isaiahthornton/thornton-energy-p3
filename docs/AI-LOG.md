@@ -77,3 +77,13 @@ model diagram, a business requirements document, and a five-minute client demo s
 **What was checked or changed:** Service names, URLs, ports, image names and test counts were taken from the repository and the running project, not from memory.
 
 **Human review:** Pending. Isaiah to read the documents and correct anything the team would not say.
+
+## 5. Chat fixes after a friend tested it
+
+**Prompt (summary):** A tester found the outage flow asked for a typed "I confirm" and then showed a confirmation button too, the button text came through as "undefined", and the assistant sounded blunt about payments.
+
+**Output summary:** The confirmation details are now sent in the format the browser reads. Tapping "Yes, send it" files the report directly, so it no longer depends on the model repeating exact words. The outage instructions and tool description now say the button is the only confirmation. The payment reply and the energy-saving tips were softened and limited.
+
+**What was checked or changed:** Server and front-end tests still pass. The outage flow needs one more hand test on the cluster after the new images are deployed.
+
+**Human review:** Pending. Isaiah to read the changed outage steps in `CustomerPrompt.cs` and the confirmed-report block in `Program.cs`.
