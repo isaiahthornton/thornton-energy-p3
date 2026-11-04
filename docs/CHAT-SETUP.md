@@ -2,12 +2,12 @@
 
 ## What is implemented
 
-- A small chat button in the bottom-right corner of every page. It appears only for a signed-in customer; anonymous visitors and admins never see it.
-- Separate `server/ThorntonEnergy.Chat.Api` .NET 10 service. It validates the same issuer, audience, and signing key as the existing APIs, and only allows the `Customer` role to call chat.
-- The browser holds the active transcript in component memory. No transcript endpoint, database, or browser storage is used. Reset starts a fresh conversation; leaving the page or logging out discards the component's transcript.
+- A small light-bulb button in the bottom-right corner of every page, for everyone. Its name is Wattson.
+- Separate `server/ThorntonEnergy.Chat.Api` .NET 10 service. It validates the same issuer, audience, and signing key as the existing APIs. The role in the signed token picks the assistant: `Customer` gets the personal assistant; everyone else (visitors, admins) gets the general one, which has no account access and can only read the public rate plans.
+- The browser holds the active transcript in component memory. No transcript endpoint, database, or browser storage is used. Reset starts a fresh conversation, and signing in or out starts a new one automatically.
 - Server-sent events carry incremental text, confirmation prompts, and safe retry errors. Nginx disables proxy buffering for `/api/chat`.
 - An allow-listed tool mediator forwards the authenticated customer's bearer only to internal customer APIs. It derives customer identity from the validated JWT, does not take a customer ID from model arguments, and never puts the JWT in the model request or logs.
-- An outage write is paused until the customer confirms the exact address and description displayed in the UI. The service rechecks that both values exactly match the model's requested operation before forwarding it.
+- An outage write is paused until the customer confirms the exact address and description displayed in the UI. The service rechecks that both values match the model's requested operation (ignoring extra spaces and capital letters) before forwarding it, and a confirmation is good for one report only.
 - The tool allow-list contains no payment/bill update, meter-reading submission, admin, or cross-customer operation.
 
 ## Model configuration
@@ -28,6 +28,7 @@ Keep these in the local ignored `.env` and in the `thornton-secrets` Kubernetes 
 - On every message, the service reads the customer's own profile, rate plan, meters, bills and outages with their token and adds a short snapshot to the assistant's instructions. Anything that cannot be loaded is left out.
 - Tools remain available for details the snapshot does not hold (meter readings, rate plans) and for filing an outage.
 - Limits: 15 chat requests per customer per minute, 20 messages of up to 2,000 characters per conversation, replies capped at 500 tokens.
+- Visitors and admins: one shared pool of 20 requests a minute (the load balancer hides who is who), 10 messages of up to 500 characters, and only the public rate-plans tool.
 
 ## Local configuration
 

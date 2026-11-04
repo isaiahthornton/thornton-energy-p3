@@ -91,7 +91,7 @@ export class CustomerChat implements OnInit, OnDestroy {
       ...items,
       {
         role: 'user',
-        content: `I confirm: report an outage at ${requested.address}. Details: ${requested.description}`,
+        content: 'Yes, send it.',
       },
       { role: 'assistant', content: '' },
     ]);

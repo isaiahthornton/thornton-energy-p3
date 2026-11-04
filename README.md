@@ -1,163 +1,124 @@
-# Thornton Energy: Electric Management App (v2.0)
+# Thornton Energy
 
-A customer portal and operations back office for **Thornton Energy Inc.**, a fictional electric utility serving central New Jersey. Customers view and pay bills, track usage, compare rate plans and report outages. Admins manage accounts, meters, rate plans, billing and the outage queue, and get a live KPI dashboard, an audit trail and an outage map.
+A customer portal and operations back office for **Thornton Energy Inc.**, a fictional electric utility in central New Jersey. Customers pay bills, track usage, compare rate plans and report outages. Admins manage accounts, billing and the outage queue, with a live KPI dashboard and an audit trail.
 
-Built as a client demo. v1 was an Angular app on a mock REST API. **v2 is a real three-tier application running on Azure.**
+**This version (Project 3)** takes the original single-API app and runs it as **six small services plus a chat assistant**, each in its own container, on **Kubernetes in Azure**.
 
-## Live demo
+## Try it
 
-| | URL |
+| | |
 |---|---|
-| Web app | https://thornton-energy-web-drg8hqcqeudndtf9.centralus-01.azurewebsites.net |
-| API (base) | https://thornton-energy-api-f2hcgjatdwfzdje5.centralus-01.azurewebsites.net/api |
+| Website | http://thornton-energy.centralus.cloudapp.azure.com |
+| Chat | Click the little light bulb in the bottom-right corner |
 
-The database is on Azure SQL's free tier, which **pauses itself when idle**. The first request after a quiet period can take 30 seconds or more while it wakes up.
+The cluster is switched off between demos to save money, so the site may be offline. Ask the team to start it.
 
-### Demo logins
-
-| Role | Email | Password | Good for showing |
+| Role | Email | Password | Good for |
 |---|---|---|---|
-| Admin | `support@thornenergy.com` | `admin123` | Every admin page |
 | Customer | `jane@example.com` | `jane123` | Unpaid bill, active outage, usage history |
 | Customer | `john@example.com` | `john123` | Time-of-Use plan |
-| Customer | `maria@example.com` | `maria123` | Fully paid account, Green Energy plan |
+| Customer | `maria@example.com` | `maria123` | Fully paid account |
+| Admin | `support@thornenergy.com` | `admin123` | Every admin page |
 
-These are demo accounts with demo data only.
+Demo accounts with demo data only.
 
-## Architecture
+## How it fits together
 
 ```mermaid
 flowchart LR
-    Browser["Browser<br/>Angular 22 SPA"] -- "HTTPS + JWT" --> API["ASP.NET Core Web API<br/>.NET 10, controllers + services"]
-    API -- "EF Core" --> DB[("Azure SQL Database<br/>tables, triggers, view, procedure")]
-    Browser -- "map tiles" --> OSM["OpenStreetMap"]
-    subgraph Azure ["Azure (free tiers)"]
-        Web["App Service F1: static Angular build"]
-        API
-        DB
-    end
-    Web -. "serves" .-> Browser
+    B["Browser<br/>Angular app"] --> W["web<br/>nginx router"]
+    W --> I["Identity<br/>logins, dashboard"]
+    W --> C["Customers<br/>accounts, plans"]
+    W --> BI["Billing"]
+    W --> O["Outages<br/>+ map"]
+    W --> M["Metering"]
+    W --> MS["Messages"]
+    W --> CH["Chat<br/>Wattson"]
+    CH --> AI["Azure AI Foundry<br/>model"]
+    I & BI & O -. "ask over HTTP" .-> C
+    I --- D1[("DB")]
+    C --- D2[("DB")]
+    BI --- D3[("DB")]
+    O --- D4[("DB")]
+    M --- D5[("DB")]
+    MS --- D6[("DB")]
 ```
 
-Inside the API, a request flows through layers, each with one job:
+The browser only talks to the website. The website's nginx sends each URL to the one service that owns it. Every service has **its own database** (six databases on one SQL Server), checks the login token itself, and asks other services over HTTP when it needs their data.
 
-`middleware -> authentication -> authorization -> controller -> service -> repository -> DbContext -> SQL`
+| Service | Owns | URLs |
+|---|---|---|
+| Identity | Logins, tokens, admin dashboard | `/api/auth` `/api/admin` |
+| Customers | Customers and rate plans | `/api/customers` `/api/ratePlans` |
+| Billing | Bills and billing numbers | `/api/bills` |
+| Outages | Outage reports and the map | `/api/outages` |
+| Metering | Meters and readings | `/api/meters` `/api/meterReadings` |
+| Messages | Contact-form messages | `/api/messages` |
+| Chat | The assistant (no database) | `/api/chat` |
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a file-by-file map and the data model.
-Customer chat setup and Foundry adapter requirements: [docs/CHAT-SETUP.md](docs/CHAT-SETUP.md).
+Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Tech stack
+## Meet Wattson
 
-| Layer | Technology |
-|---|---|
-| Front end | Angular 22 (standalone components, signals, reactive forms, `HttpClient` + interceptor), Leaflet maps, Vitest |
-| API | ASP.NET Core Web API on .NET 10, controllers, services, generic repository, DTOs, AutoMapper |
-| Data | Entity Framework Core 10 (code first, migrations), Azure SQL Database, SQL triggers, view and stored procedure |
-| Security | JWT bearer tokens (HS256), BCrypt password hashes, role and ownership checks, rate limiting, CORS allow-list |
-| Tests | xUnit, Moq, `WebApplicationFactory` with SQLite for integration tests, coverlet |
-| Hosting | Azure App Service (Windows, Free F1) for the API and the static front end |
+Wattson is the chat assistant. It behaves differently depending on who is asking:
 
-## Features
+- **Visitors** get a general helper: rate plans, how bills work, energy-saving tips, outage safety.
+- **Signed-in customers** get a personal one. It greets them by name and knows their plan, meters, bills and outages. It can file an outage report after the customer clicks **Confirm**.
 
-**Customer portal (`/account`)**
+The AI is never the security guard. Wattson can only call the services with the customer's **own login**, so the services' own rules still stop anyone from seeing someone else's data. It cannot take payments or change accounts. Setup and rules: [docs/CHAT-SETUP.md](docs/CHAT-SETUP.md).
 
-- Dashboard: balance due, this month's usage, active outage banner, map of the service location
-- Usage history chart from meter readings
-- Billing history with bill detail and **Pay Now**
-- Report an outage and follow its status
-- Authenticated customer chat with streaming answers and explicit outage confirmation
-- Rate plan comparison with an estimate for this customer's real usage, and one-click plan switch
+## Run it on your computer
 
-**Admin portal (`/admin`)**
+You need Docker Desktop.
 
-- Dashboard with six KPI cards and a monthly usage and billing bar chart (calculated in the database)
-- Customers: search, filter, change account status
-- Billing: monthly totals and a billing run (prices come from the customer's rate plan)
-- Meters and readings (readings must be later and not lower than the previous one)
-- Rate plans: create, edit, delete (blocked while customers are on the plan)
-- Outage queue and **outage map** (red = reported, amber = in progress, green = resolved)
-- **Activity**: an audit trail of status and rate-plan changes, written by SQL triggers (what changed, old to new, who)
-- Inbox for contact-form messages
-
-## Security model
-
-- **Authentication:** `POST /api/auth/login` checks a BCrypt password hash and returns a signed JWT (HS256, 60 minutes) with the claims `sub`, `email`, `role` and `customerId`. The API validates signature, issuer, audience and expiry on every request. Suspended or closed accounts cannot sign in, and the server enforces that.
-- **Secure by default:** every endpoint requires a signed-in user unless it says `[AllowAnonymous]`. The only public endpoints are login, register, `GET /api/ratePlans` and `POST /api/messages` (the contact form).
-- **Roles:** admin-only endpoints use `[Authorize(Roles = "Admin")]`, so a customer gets **403**.
-- **Ownership:** customers can only read or change their own bills, meters, readings and outages. The rule lives in one place (`CurrentUser`) and is used by the services, so a customer asking for someone else's data gets **403** even if they guess the id.
-- **Server-side rules:** the browser is never trusted for money or time. Bills are priced from the rate plan, payment dates and outage timestamps are set by the server, and "overdue" is calculated rather than stored.
-- **Rate limiting:** login, register and the contact form allow 10 requests per minute per IP (then 429).
-- **Validation:** request DTOs use Data Annotations; bad input returns 400.
-- **Errors:** unhandled exceptions become a clean JSON problem response with a correlation id (`X-Correlation-ID`); stack traces appear only in Development.
-- **Secrets:** never in git. Locally they live in .NET user secrets; in Azure they are App Service settings (`Jwt__Key`, the connection string).
-- **AI chat:** `/account/chat` is customer-only; the in-memory transcript is not persisted. Foundry endpoint/agent values and credentials are deployment-owned and must be configured before the chat service becomes ready.
-- **Why JWT in a header and not a cookie:** the front end and the API are different sites (two subdomains of `azurewebsites.net`, which is on the public suffix list), so cookies would be third-party cookies that browsers increasingly block. A bearer token sent by the Angular interceptor works across both sites and is not exposed to cross-site request forgery. The trade-off is that the token is kept in `sessionStorage` (cleared when the tab closes), so we rely on Angular's output escaping and the short token lifetime.
-
-## Run it locally
-
-**Prerequisites:** .NET 10 SDK, Node.js and npm, access to a SQL Server (Azure SQL or LocalDB), `dotnet-ef`.
-
-1. **Secrets** (once), from `server/ThorntonEnergy.Api`:
+1. Copy `.env.example` to `.env` and fill in `SQL_PASSWORD` and `JWT_KEY`. For chat, also set the three `FOUNDRY_` values (leave them empty and the site still works, just without chat). `.env` is never committed.
+2. Start everything:
    ```powershell
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your SQL Server connection string>"
-   dotnet user-secrets set "Jwt:Key" "<a random string of 32 or more characters>"
+   docker compose up --build
    ```
-2. **Database:** `dotnet ef database update` creates the tables, triggers, view and procedure. The first start of the API fills an empty database with demo data.
-3. **API:** `dotnet run --launch-profile https` serves https://localhost:7159 (Swagger UI at `/swagger` in Development).
-4. **Front end:** from `client`, `npm install` then `npm start` serves http://localhost:4200 (it calls the local API).
+3. Open http://localhost:4200. Databases are created and filled with demo data on first start.
+
+To use the published images instead of building, run `docker compose pull` and then `docker compose up -d --no-build`. Ports and Swagger can be changed in `.env` (see the comments in `.env.example`). SSMS: connect to `localhost,14330` as `sa`.
+
+## Run it on Kubernetes (AKS)
+
+The `k8s/` folder holds one set of files for the whole app, with image lists for local Docker Desktop and for AKS. See [k8s/README.md](k8s/README.md). In short: start the cluster, create the secret from `.env`, then `kubectl apply -k k8s/aks`.
+
+## Security at a glance
+
+- **Secure by default:** every endpoint needs a signed-in user unless it says otherwise. Public ones are login, register, the rate plans and the contact form.
+- **Roles and ownership:** admin pages need the admin role, and a customer asking for someone else's data gets a 403.
+- **Services trust tokens, not the network:** each service checks the signed token itself. Service-to-service endpoints are blocked at the website's router.
+- **Server-side rules:** bills are priced and dated on the server, never trusted from the browser.
+- **Secrets stay out of git:** `.env` locally, a Kubernetes secret in the cluster.
+- **Chat guardrails:** fixed list of tools, confirmation before any change, rate limits, and no account access for visitors.
 
 ## Testing
 
 ```powershell
-# Server: unit tests + integration tests (in-memory SQLite), with coverage
-cd server
-dotnet test --collect:"XPlat Code Coverage"
-
-# Front end: unit tests, with coverage
-cd client
-npx ng test --watch=false --coverage
+dotnet test server/ThorntonEnergy.slnx      # 129 tests across the services
+cd client; npx ng test --watch=false        # 78 tests
 ```
 
-- **Unit tests** cover the billing rules, token creation, ownership rules, and the bill and meter services (pay once, ownership, overdue, reading order).
-- **Integration tests** start the whole API in memory and check the security rules over HTTP: 401 without a token, 403 for a customer on an admin endpoint or another customer's bill, wrong password, successful login, and full workflows.
-- The admin KPI view, the usage procedure and the audit session interceptor only exist in SQL Server, so SQLite tests cover only who may call those endpoints.
+Each service has its own test project that runs without Docker or the other services.
 
-## Deployment
+## What's next
 
-Both apps run in the resource group `rg-thornton-energy` (Central US) on one free App Service plan. Add any new app setting in Azure **before** deploying code that needs it (the API refuses to start without `Jwt__Key`).
+Still to do or worth doing: **HTTPS**, **Azure Key Vault**, **automatic tests and image builds (CI)**, database backups, and a few smaller ideas. The full list, including how to turn on Swagger and how to check SSMS on the cluster, is in [docs/NEXT-STEPS.md](docs/NEXT-STEPS.md).
 
-```powershell
-# API (from server\ThorntonEnergy.Api)
-dotnet publish -c Release -o "$env:TEMP\thornton-api"
-Compress-Archive -Path "$env:TEMP\thornton-api\*" -DestinationPath "$env:TEMP\thornton-api.zip" -Force
-az webapp deploy --resource-group rg-thornton-energy --name thornton-energy-api --src-path "$env:TEMP\thornton-api.zip" --type zip
+## Team
 
-# Front end (from client)
-npx ng build
-Compress-Archive -Path "dist\Electric-Management-App\browser\*" -DestinationPath "$env:TEMP\thornton-web.zip" -Force
-az webapp deploy --resource-group rg-thornton-energy --name thornton-energy-web --src-path "$env:TEMP\thornton-web.zip" --type zip
-```
+Isaiah Thornton, Sebastian Inoa, Michael Gerges and Chris Merlini built this together as a four-person team: splitting the app into services, writing the Docker and Kubernetes setup, publishing the images, and building the chat assistant.
 
-Apply new database migrations with `dotnet ef database update` (uses the connection string in user secrets) before deploying code that depends on them.
+## Tech stack
 
-## Skills and technologies demonstrated
-
-- Layered web API design: controllers for HTTP only, services for business rules, a generic repository for data access, DTOs and AutoMapper at the boundary, a `Result<T>` type instead of exceptions for expected failures
-- Dependency injection (scoped, singleton, open generics), the options pattern, custom middleware, structured logging with correlation ids
-- Authentication and authorization with JWT, roles and per-record ownership, BCrypt hashing, rate limiting, CORS, secrets management
-- Relational design with EF Core code-first migrations, optimistic concurrency (`rowversion`), enums as text, unique indexes
-- SQL Server: audit triggers, a view, a stored procedure, `SESSION_CONTEXT`, time-zone conversion, all delivered through migrations
-- Testing: xUnit theories, Moq, in-memory SQLite, `WebApplicationFactory` integration tests, code coverage
-- Angular: standalone components, signals, reactive forms, an HTTP interceptor, route guards, lazy loading, Leaflet maps, plain CSS charts
-- Cloud: Azure App Service, Azure SQL, CLI deployments, configuration through app settings
-
-## How AI was used
-
-An AI coding assistant helped write code, SQL and documents. Every AI-assisted SQL object and document is logged in [docs/AI-LOG.md](docs/AI-LOG.md) with the prompt, what came back, and what was checked or changed.
+Angular 22 · ASP.NET Core (.NET 10) · Entity Framework Core · SQL Server · Docker and Docker Compose · Kubernetes on Azure (AKS) · Azure AI Foundry · xUnit and Vitest
 
 ## More documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): file-by-file map, request flow, data model
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): services, how they trust each other, data, Kubernetes layout
+- [docs/CHAT-SETUP.md](docs/CHAT-SETUP.md): the assistant's setup, limits and tools
+- [docs/DEMO.md](docs/DEMO.md): the demo script
+- [docs/NEXT-STEPS.md](docs/NEXT-STEPS.md): what is left and what to improve
 - [docs/BRD.md](docs/BRD.md): business requirements
-- [docs/DEMO.md](docs/DEMO.md): five-minute demo script
-- [docs/AI-LOG.md](docs/AI-LOG.md): AI usage log
+- [docs/AI-LOG.md](docs/AI-LOG.md): how AI was used, and what was checked

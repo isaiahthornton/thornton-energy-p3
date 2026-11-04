@@ -9,6 +9,7 @@ using ThorntonEnergy.Shared.Auth;
 using ThorntonEnergy.Shared.Extensions;
 
 const string ChatRateLimit = "chat";
+var EventJson = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddJWTAuth();
@@ -122,10 +123,11 @@ app.MapPost("/api/chat/stream", async (
     context.Response.Headers.CacheControl = "no-cache, no-store";
     context.Response.Headers.Append("X-Accel-Buffering", "no");
 
+    // camelCase, because the browser reads "address" and "description" (the default would send "Address")
     async Task SendEvent(string name, object data)
     {
         await context.Response.WriteAsync($"event: {name}\n");
-        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(data)}\n\n");
+        await context.Response.WriteAsync($"data: {JsonSerializer.Serialize(data, EventJson)}\n\n");
         await context.Response.Body.FlushAsync(context.RequestAborted);
     }
 
@@ -150,6 +152,20 @@ app.MapPost("/api/chat/stream", async (
 
         // A confirmation is good for one outage report only, so a repeated model call cannot file it twice
         var confirmation = isCustomer ? request.OutageConfirmation : null;
+        var outageFiled = false;
+
+        // The customer tapped "Yes, send it" on the card. File exactly what the card showed right now,
+        // instead of hoping the model repeats the same words, then let the model tell the customer.
+        if (confirmation is { Confirmed: true })
+        {
+            var confirmedCall = new AgentToolCall("confirmed-outage", "report_outage",
+                JsonSerializer.Serialize(new { address = confirmation.Address, description = confirmation.Description }));
+            var filed = await tools.ExecuteAsync(confirmedCall, customerId, customerToken, confirmation, context.RequestAborted);
+            messages.Add(AgentMessage.ForToolCalls([confirmedCall]));
+            messages.Add(AgentMessage.ToolResult(confirmedCall.Id, filed.Content));
+            outageFiled = true;
+            confirmation = null;
+        }
 
         for (var round = 0; round < 4; round++)
         {
@@ -170,7 +186,9 @@ app.MapPost("/api/chat/stream", async (
                 // Visitors may only read the public plans, whatever the model asks for
                 var result = !isCustomer && call.Name != "get_rate_plans"
                     ? new ToolExecutionResult("{\"error\":\"Please sign in to use this.\"}")
-                    : await tools.ExecuteAsync(call, customerId, customerToken, confirmation, context.RequestAborted);
+                    : outageFiled && call.Name == "report_outage"
+                        ? new ToolExecutionResult("{\"error\":\"The report was already filed. Do not file another.\"}")
+                        : await tools.ExecuteAsync(call, customerId, customerToken, confirmation, context.RequestAborted);
 
                 if (result.ConfirmationRequired is not null)
                 {
