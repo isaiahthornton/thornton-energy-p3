@@ -1,5 +1,5 @@
-# Azure Kubernetes Service: pull the versioned images from the three Docker Hub accounts.
-# Replace the three account names once each owner has pushed their images (public repos).
+# Azure Kubernetes Service: pull the versioned images from Docker Hub (public repos).
+# The services and database are under michaelgeo29; the website and chat are under isaiahthornton.
 resources:
   - ../base
 images:

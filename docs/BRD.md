@@ -5,7 +5,7 @@
 | **Project** | Thornton Energy: customer portal and admin back office (v2.0) |
 | **Client** | Demonstration for ConEd, business unit P&R |
 | **Developer** | Isaiah Thornton |
-| **Status** | v2.0 delivered and running on Azure |
+| **Status** | v2.0 requirements, delivered. Project 3 now runs the same application as microservices on Kubernetes (see the addendum at the end) |
 | **Note** | Drafted with AI assistance (see `docs/AI-LOG.md`); to be reviewed by the developer before use with a client |
 
 ## 1. Purpose
@@ -150,3 +150,12 @@ The release is accepted when:
 - Real payment integration
 - Hourly time-of-use pricing and smart-meter ingestion
 - Continuous integration and deployment pipeline
+
+## Addendum: Project 3 (microservices on Kubernetes)
+
+The requirements above still describe what the application does. Project 3 changes how it is built and hosted:
+
+- The API is split into six services, each with its own database, behind one router. See `docs/ARCHITECTURE.md`.
+- A chat assistant (Wattson) helps visitors with general questions and signed-in customers with their own account. It may only act with the customer's own login, and any outage report needs a confirmation click.
+- Hosting is a small Kubernetes cluster on Azure that runs only while needed, so the "$0, free tiers only" line above no longer applies to this deployment.
+- Public HTTPS is not set up yet, so the "HTTPS only" line above is not met on the cluster. See `docs/NEXT-STEPS.md`.

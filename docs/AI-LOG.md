@@ -54,3 +54,26 @@ model diagram, a business requirements document, and a five-minute client demo s
   gathered from the client.
 
 **Human review:** Pending. Isaiah to read the documents and correct anything he would not say himself.
+
+## 3. Chat assistant (code and instructions)
+
+**Prompt (summary):** Add a chat assistant that knows the signed-in customer, gives visitors a general helper, files outage reports only after a confirmation click, and never lets the model see another customer's data. Add a corner button, per-caller rate limits and tests.
+
+**Output summary:** A chat service with two prompts (customer and visitor), an account snapshot builder, a fixed tool list, a rate limiter, an Angular corner widget, and unit tests for the snapshot builder and the tool executor.
+
+**What was checked or changed:**
+- Tests cover the snapshot (including a failing service and text flattening), the tool list, and the confirmation rules; all pass.
+- The assistant was tried by hand as a visitor and as a customer, including a request for another customer's data, which it refused.
+- The model, endpoint and key are the team's own deployment; no secret is in git.
+
+**Human review:** Pending. Isaiah to read `CustomerPrompt.cs`, `VisitorPrompt.cs` and `Program.cs` in the chat service and be able to explain the two kinds of caller and the limits.
+
+## 4. Project 3 documentation (README, architecture, demo script, next steps)
+
+**Prompt (summary):** Rewrite the README and docs for the microservices version on Kubernetes: short and readable, with a list of what is left to do.
+
+**Output summary:** A shorter README, a new architecture document, a new demo script, a next-steps page, and small fixes to the Kubernetes notes, chat notes and BRD.
+
+**What was checked or changed:** Service names, URLs, ports, image names and test counts were taken from the repository and the running project, not from memory.
+
+**Human review:** Pending. Isaiah to read the documents and correct anything the team would not say.

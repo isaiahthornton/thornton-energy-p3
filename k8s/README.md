@@ -10,11 +10,9 @@ Same app as `docker-compose.yml`, described for Kubernetes. One set of files in 
 | web (Angular + nginx) | 2 | the only public address (LoadBalancer) |
 
 Service names match compose, so `client/nginx.conf` and every connection string work unchanged.
-Secrets are never in git: they are created from your local `.env`. For chat,
-the secret must also contain `FOUNDRY_ENDPOINT`, `FOUNDRY_AGENT_ID`, and
-`FOUNDRY_API_KEY` from the Foundry owner; see [CHAT-SETUP.md](../docs/CHAT-SETUP.md).
-The chat readiness probe stays unhealthy until the configured HTTPS endpoint
-and agent ID are present.
+Secrets are never in git: they are created from your local `.env`. For chat, the secret also needs
+`FOUNDRY_ENDPOINT`, `FOUNDRY_AGENT_ID` and `FOUNDRY_API_KEY`; see [CHAT-SETUP.md](../docs/CHAT-SETUP.md).
+The chat pod reports "not ready" until the endpoint and deployment name are present.
 
 ## Run on Docker Desktop Kubernetes
 
@@ -47,5 +45,19 @@ kubectl delete namespace thornton                      # deletes everything, inc
 
 ## AKS
 
-Same commands with `kubectl apply -k k8s/aks`, after the three Docker Hub account names in `aks/kustomization.yaml` are filled in
-and the cluster is created (team agrees size and cost first).
+The AKS list pulls the published images from Docker Hub (see `aks/kustomization.yaml`). The cluster is `aks-thornton-p3` in the resource group `rg-thornton-p3`.
+
+```powershell
+az aks start -g rg-thornton-p3 -n aks-thornton-p3              # takes a few minutes
+az aks get-credentials -g rg-thornton-p3 -n aks-thornton-p3
+kubectl create namespace thornton
+kubectl create secret generic thornton-secrets -n thornton --from-env-file=.env
+kubectl apply -k k8s/aks
+kubectl get pods -n thornton -w
+kubectl get svc web -n thornton                                # the public address
+```
+
+- **The address:** the `web` service has an Azure DNS name, `thornton-energy.centralus.cloudapp.azure.com`.
+- **If the namespace or secret already exists:** do not recreate them. The database password was set the first time the database started, so replacing `SQL_PASSWORD` would lock the services out. To add or change only the chat values, patch the existing secret instead.
+- **Swagger and SSMS:** see [docs/NEXT-STEPS.md](../docs/NEXT-STEPS.md).
+- **When idle:** `az aks stop -g rg-thornton-p3 -n aks-thornton-p3`. A stopped cluster still bills a little for its disks and public address.
