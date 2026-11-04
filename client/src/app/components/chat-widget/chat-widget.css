@@ -1,0 +1,37 @@
+.chat-widget { bottom: 20px; position: fixed; right: 20px; z-index: 1000; }
+
+/* The little square button */
+.chat-launcher {
+  align-items: center;
+  background: var(--grid-navy);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px #0b2a3a40;
+  color: var(--safety-amber);
+  cursor: pointer;
+  display: flex;
+  height: 58px;
+  justify-content: center;
+  width: 58px;
+}
+.chat-launcher:hover { background: var(--line-blue-dark); }
+.chat-launcher:focus-visible { outline: 3px solid var(--line-blue); outline-offset: 3px; }
+
+.chat-panel {
+  background: var(--surface);
+  border-radius: 14px;
+  bottom: 70px;
+  box-shadow: 0 12px 36px #0b2a3a45;
+  display: flex;
+  height: min(560px, calc(100vh - 110px));
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  width: 370px;
+}
+.chat-panel[hidden] { display: none; }
+
+@media (max-width: 480px) {
+  .chat-widget { bottom: 14px; right: 14px; }
+  .chat-panel { width: calc(100vw - 28px); }
+}

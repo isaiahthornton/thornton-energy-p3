@@ -1,0 +1,17 @@
+<div class="chat-widget">
+    <!-- Hidden, not removed, so the conversation survives closing the window and moving between pages -->
+    <div class="chat-panel" id="chat-panel" role="dialog" [attr.aria-label]="botName + ' chat'" [hidden]="!isOpen()">
+      @for (key of [chatKey()]; track key) {
+        <app-customer-chat (closed)="isOpen.set(false)" />
+      }
+    </div>
+    <button class="chat-launcher" type="button" (click)="toggle()"
+      [attr.aria-expanded]="isOpen()" aria-controls="chat-panel"
+      [attr.aria-label]="isOpen() ? 'Close chat' : 'Chat with ' + botName">
+      @if (isOpen()) {
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.6.5 1 1.1 1 1.9v.9h5.8v-.9c0-.8.4-1.4 1-1.9A6.5 6.5 0 0 0 12 2.5z"/><path d="M9.8 19.2h4.4M10.6 21.7h2.8"/><path d="M9.7 9.6c.6.9 1.4 1.4 2.3 1.4s1.7-.5 2.3-1.4"/><circle cx="10.2" cy="7.4" r=".7" fill="currentColor" stroke="none"/><circle cx="13.8" cy="7.4" r=".7" fill="currentColor" stroke="none"/></svg>
+      }
+    </button>
+</div>

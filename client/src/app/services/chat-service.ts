@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { AuthService } from './auth-service';
 import { API_URL } from '../utils/api';
+
+// The assistant's name. Change it here and in server/ThorntonEnergy.Chat.Api/ChatPersona.cs.
+export const BOT_NAME = 'Wattson';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -27,7 +29,20 @@ export interface ChatStreamHandlers {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+
+  // The customer's first name for the greeting, or null if it cannot be loaded
+  async getFirstName(): Promise<string | null> {
+    const token = this.auth.getToken();
+    if (!token) return null;
+    try {
+      const response = await fetch(`${API_URL}/chat/hello`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) return null;
+      const body = (await response.json()) as { firstName?: string | null };
+      return body.firstName ?? null;
+    } catch {
+      return null;
+    }
+  }
 
   async stream(
     messages: ChatMessage[],
@@ -35,17 +50,13 @@ export class ChatService {
     outageConfirmation?: OutageConfirmation,
     signal?: AbortSignal,
   ): Promise<void> {
+    // Visitors have no token and get the general assistant; the server decides from the token's role
     const token = this.auth.getToken();
-    if (!token) {
-      this.auth.logout();
-      await this.router.navigate(['/login'], { queryParams: { returnUrl: '/account/chat' } });
-      throw new Error('Your session expired. Please sign in again.');
-    }
 
     const response = await fetch(`${API_URL}/chat/stream`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
       },
@@ -54,13 +65,11 @@ export class ChatService {
     });
 
     if (!response.ok || !response.body) {
-      if (response.status === 401 || response.status === 403) {
-        this.auth.logout();
-        await this.router.navigate(['/login'], { queryParams: { returnUrl: '/account/chat' } });
-      }
       throw new Error(response.status === 503
         ? 'Chat is not configured yet. Please try again later.'
-        : 'Chat is temporarily unavailable. Please retry.');
+        : response.status === 429
+          ? 'Lots of people are chatting right now. Please wait a minute and try again.'
+          : 'Chat is temporarily unavailable. Please retry.');
     }
 
     const reader = response.body.getReader();

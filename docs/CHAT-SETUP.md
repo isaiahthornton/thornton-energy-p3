@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-- Angular customer chat at `/account/chat`, protected by the account route's customer-role guard. The chat links render only for a signed-in customer; they are absent for anonymous visitors and admins.
+- A small chat button in the bottom-right corner of every page. It appears only for a signed-in customer; anonymous visitors and admins never see it.
 - Separate `server/ThorntonEnergy.Chat.Api` .NET 10 service. It validates the same issuer, audience, and signing key as the existing APIs, and only allows the `Customer` role to call chat.
 - The browser holds the active transcript in component memory. No transcript endpoint, database, or browser storage is used. Reset starts a fresh conversation; leaving the page or logging out discards the component's transcript.
 - Server-sent events carry incremental text, confirmation prompts, and safe retry errors. Nginx disables proxy buffering for `/api/chat`.
@@ -10,25 +10,30 @@
 - An outage write is paused until the customer confirms the exact address and description displayed in the UI. The service rechecks that both values exactly match the model's requested operation before forwarding it.
 - The tool allow-list contains no payment/bill update, meter-reading submission, admin, or cross-customer operation.
 
-## Foundry configuration — owner action required
+## Model configuration
 
-No Foundry endpoint, project ID, agent ID, deployment name, or credential was available during implementation. None is fabricated or committed. Set these values only in local ignored `.env` or in deployment secret management:
+The chat service talks to a **model deployment** in Azure AI Foundry using the standard chat-completions API with streaming and tool calling. It does not use a Foundry Agent: the instructions and the tools live in this repository (`CustomerPrompt.cs` and `FoundryAgentClient.cs`), so they are reviewed, tested and versioned with the code, and every tool call is made by this service with the signed-in customer's own token.
 
 | Environment variable | Purpose |
 |---|---|
-| `FOUNDRY_ENDPOINT` | Complete HTTPS URL of the configured Foundry-compatible streaming endpoint |
-| `FOUNDRY_AGENT_ID` | Existing agent identifier used as the request's `model` value |
-| `FOUNDRY_API_KEY` | Endpoint credential, if required by the owner-configured endpoint |
+| `FOUNDRY_ENDPOINT` | Full chat-completions URL, e.g. `https://<resource>.services.ai.azure.com/openai/v1/chat/completions` |
+| `FOUNDRY_AGENT_ID` | The deployment name chosen in the portal (sent as the request's `model`) |
+| `FOUNDRY_API_KEY` | The key from the portal, sent in the `api-key` header |
 
-`FoundryAgentClient` is the replaceable provider adapter. Its wire contract is OpenAI-compatible streaming chat completions over HTTPS: the endpoint accepts `{ model, stream: true, messages, tools, tool_choice }`, returns SSE `data:` events containing `choices[0].delta.content` and/or `choices[0].delta.tool_calls`, and ends with `[DONE]`. The adapter parses tool calls and relays text while streaming; automatic HTTP redirects are disabled so configured credentials are not forwarded to a redirect target.
+Keep these in the local ignored `.env` and in the `thornton-secrets` Kubernetes secret. Never commit them. Redirects are disabled so the key is never forwarded to another host. Until the endpoint and deployment name are set, readiness returns 503 and chat shows a friendly "not configured" message.
 
-Foundry agent APIs vary by project/agent version and may require a project-scoped endpoint, Entra ID, different request/response semantics, or a separately deployed model. Because the actual Foundry values and supported endpoint contract are unavailable, this integration does **not** assert that a raw Foundry project URL accepts this adapter contract. The Foundry owner must provide a compatible endpoint and authentication mode or replace `IFoundryAgentClient`/`FoundryAgentClient` with the matching Foundry SDK/adapter before enabling chat. Until `FOUNDRY_ENDPOINT` and `FOUNDRY_AGENT_ID` are configured, readiness returns HTTP 503 and chat responses return a configuration error. No Foundry SDK package was added whose compatibility would otherwise depend on an unavailable project/agent deployment value.
+## How the assistant knows the customer
+
+- When the chat window opens, `GET /api/chat/hello` returns the customer's first name for the greeting (no AI call).
+- On every message, the service reads the customer's own profile, rate plan, meters, bills and outages with their token and adds a short snapshot to the assistant's instructions. Anything that cannot be loaded is left out.
+- Tools remain available for details the snapshot does not hold (meter readings, rate plans) and for filing an outage.
+- Limits: 15 chat requests per customer per minute, 20 messages of up to 2,000 characters per conversation, replies capped at 500 tokens.
 
 ## Local configuration
 
 1. Copy `.env.example` to `.env` and supply the existing SQL/JWT values needed by the app. Add the owner-provided Foundry endpoint, agent ID, and key as above. `.env` is ignored by git.
 2. Build and start the complete app with `docker compose up --build`. Open the configured `WEB_PORT` (default `http://localhost:4200`).
-3. Sign in as a customer. The chat link is not shown to anonymous users or admins. `/api/chat/stream` is reached through the web container's Nginx route; the chat container has no host-published port.
+3. Sign in as a customer and click the chat button in the bottom-right corner. It is not shown to anonymous users or admins. `/api/chat/stream` is reached through the web container's Nginx route; the chat container has no host-published port.
 4. Verify `GET /health/live` and `GET /health/ready` on the chat service from the cluster network. Readiness intentionally stays 503 until the Foundry endpoint and agent ID are present.
 5. Test a read-only question; confirm reset removes the current transcript; test provider/network error and retry behavior; then test an outage through the confirmation UI. Do not treat a UI message as proof of a filed outage—verify the customer-scoped outage list/API.
 
@@ -52,6 +57,7 @@ These are the chat service's complete allow-listed internal operations:
 | `GET /api/meterReadings` | `get_meter_readings` | Existing API scopes to the signed-in customer's meters |
 | `GET /api/bills` | `get_bills` | Existing API scopes to the signed-in customer |
 | `GET /api/outages` | `get_outages` | Existing API scopes to the signed-in customer |
+| `GET /api/ratePlans` | `get_rate_plans` | Public plan list |
 | `POST /api/outages` | `report_outage` | Only after explicit exact-details confirmation; customer ID omitted and derived by the API from JWT |
 
 Admin list/map/update endpoints, cross-customer identifiers, `POST /api/meterReadings`, and bill mutation/payment-like operations are not registered as chat tools. Existing authorized application routes remain governed by their own service policies.

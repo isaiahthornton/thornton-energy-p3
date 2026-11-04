@@ -57,6 +57,33 @@ public class CustomerToolExecutorTests
         Assert.Null(handler.Request);
     }
 
+    [Fact]
+    public async Task RatePlansToolReadsThePublicPlanList()
+    {
+        var handler = new RecordingHandler();
+        var executor = CreateExecutor(handler);
+
+        await executor.ExecuteAsync(
+            new AgentToolCall("call-6", "get_rate_plans", "{}"), 42, "customer-jwt", null, CancellationToken.None);
+
+        Assert.Equal("http://customers:8080/api/ratePlans", handler.Request?.RequestUri?.ToString());
+    }
+
+    [Fact]
+    public async Task ConfirmationIgnoresExtraSpacesAndCapitalLetters()
+    {
+        var handler = new RecordingHandler();
+        var executor = CreateExecutor(handler);
+        var call = new AgentToolCall("call-7", "report_outage",
+            """{"address":"12 Utility Road","description":"No power at the house"}""");
+        var confirmation = new OutageConfirmation(true, "12  utility road ", "No power  AT the house");
+
+        var result = await executor.ExecuteAsync(call, 42, "customer-jwt", confirmation, CancellationToken.None);
+
+        Assert.Null(result.ConfirmationRequired);
+        Assert.Equal(HttpMethod.Post, handler.Request?.Method);
+    }
+
     [Theory]
     [InlineData("create_meter_reading")]
     [InlineData("mark_bill_paid")]

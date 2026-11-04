@@ -48,12 +48,6 @@ export const routes: Routes = [
         title: 'Outages | Thornton Energy',
       },
       {
-        path: 'chat',
-        loadComponent: () =>
-          import('./components/account/customer-chat/customer-chat').then((m) => m.CustomerChat),
-        title: 'Customer Chat | Thornton Energy',
-      },
-      {
         path: 'rate-plans',
         loadComponent: () =>
           import('./components/account/rate-plan-compare/rate-plan-compare').then((m) => m.RatePlanCompare),
