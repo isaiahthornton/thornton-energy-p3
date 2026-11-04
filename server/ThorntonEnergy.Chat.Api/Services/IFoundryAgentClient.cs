@@ -8,5 +8,6 @@ public interface IFoundryAgentClient
         FoundryOptions options,
         IReadOnlyList<AgentMessage> messages,
         Func<string, Task> onTextDelta,
+        IReadOnlyList<object> tools,
         CancellationToken cancellationToken);
 }

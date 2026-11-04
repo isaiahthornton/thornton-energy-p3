@@ -19,6 +19,7 @@ public sealed class FoundryAgentClient(HttpClient httpClient, ILogger<FoundryAge
         FoundryOptions options,
         IReadOnlyList<AgentMessage> messages,
         Func<string, Task> onTextDelta,
+        IReadOnlyList<object> tools,
         CancellationToken cancellationToken)
     {
         if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpoint)
@@ -36,8 +37,10 @@ public sealed class FoundryAgentClient(HttpClient httpClient, ILogger<FoundryAge
             model = options.AgentId,
             stream = true,
             messages = messages.Select(ToWireMessage),
-            tools = ToolDefinitions.All,
-            tool_choice = "auto"
+            tools,
+            tool_choice = "auto",
+            temperature = 0.3,            // steady, factual answers
+            max_completion_tokens = 500   // keeps replies short and cost small
         }, options: JsonOptions);
 
         using var response = await httpClient.SendAsync(
@@ -153,12 +156,17 @@ public sealed class FoundryAgentClient(HttpClient httpClient, ILogger<FoundryAge
 
 internal static class ToolDefinitions
 {
+    private static readonly object RatePlansTool =
+        Tool("get_rate_plans", "Read the available rate plans (price per kWh, monthly fee, description). Public information.", new { type = "object", properties = new { }, additionalProperties = false });
+
+    // What a signed-in customer's assistant may use
     public static readonly object[] All =
     [
         Tool("get_profile", "Read the authenticated customer's profile.", new { type = "object", properties = new { }, additionalProperties = false }),
         Tool("get_meters", "Read meters belonging to the authenticated customer.", new { type = "object", properties = new { }, additionalProperties = false }),
         Tool("get_meter_readings", "Read meter readings belonging to the authenticated customer.", new { type = "object", properties = new { }, additionalProperties = false }),
         Tool("get_bills", "Read bills belonging to the authenticated customer. This does not initiate payment.", new { type = "object", properties = new { }, additionalProperties = false }),
+        RatePlansTool,
         Tool("get_outages", "Read outage reports belonging to the authenticated customer.", new { type = "object", properties = new { }, additionalProperties = false }),
         Tool("report_outage", "Create an outage report only after the customer explicitly confirms the exact address and description.", new
         {
@@ -172,6 +180,9 @@ internal static class ToolDefinitions
             additionalProperties = false
         })
     ];
+
+    // What the visitor assistant may use: public information only
+    public static readonly object[] Visitor = [RatePlansTool];
 
     private static object Tool(string name, string description, object parameters) => new
     {

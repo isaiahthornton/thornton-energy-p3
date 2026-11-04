@@ -1,26 +1,35 @@
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../services/auth-service';
 import {
+  BOT_NAME,
   ChatMessage,
   ChatService,
   OutageConfirmation,
   OutageConfirmationPrompt,
 } from '../../../services/chat-service';
 
+// The chat window itself. The floating button and open/close live in ChatWidget.
 @Component({
   imports: [FormsModule],
   selector: 'app-customer-chat',
   styleUrl: './customer-chat.css',
   templateUrl: './customer-chat.html',
 })
-export class CustomerChat implements OnDestroy {
+export class CustomerChat implements OnInit, OnDestroy {
   private readonly chat = inject(ChatService);
-  protected readonly messages = signal<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content: 'Hello! I can help with your account, bills, meter readings, and outage reports. What can I help you with?',
-    },
-  ]);
+  private readonly isCustomer = inject(AuthService).getCurrentUser()?.role === 'customer';
+
+  // Tells the widget to close the window
+  readonly closed = output<void>();
+
+  protected readonly botName = BOT_NAME;
+
+  // Customers get the personal assistant (with their first name once it loads); everyone else the general one
+  private greeting = this.isCustomer
+    ? `Hi there! I'm ${BOT_NAME}. I can help with your bills, usage, meters, outages and any energy questions. What can I do for you?`
+    : `Hi! I'm ${BOT_NAME}, Thornton Energy's virtual assistant. Ask me about our rate plans, saving energy, or what to do in an outage. Sign in as a customer to ask about your own account.`;
+  protected readonly messages = signal<ChatMessage[]>([{ role: 'assistant', content: this.greeting }]);
   protected readonly draft = signal('');
   protected readonly isSending = signal(false);
   protected readonly errorMessage = signal('');
@@ -28,6 +37,16 @@ export class CustomerChat implements OnDestroy {
 
   private lastUserMessage = '';
   private abortController?: AbortController;
+
+  async ngOnInit(): Promise<void> {
+    // Say "Hi <first name>" when the window is created (a cheap lookup, no AI call)
+    if (!this.isCustomer) return;
+    const firstName = await this.chat.getFirstName();
+    if (!firstName) return;
+    this.greeting = `Hi ${firstName}! I'm ${BOT_NAME}. I can help with your bills, usage, meters, outages and any energy questions. What can I do for you?`;
+    // Only swap the greeting if the customer has not started typing yet
+    if (this.messages().length === 1) this.messages.set([{ role: 'assistant', content: this.greeting }]);
+  }
 
   ngOnDestroy(): void {
     this.abortController?.abort();
@@ -41,6 +60,14 @@ export class CustomerChat implements OnDestroy {
     this.lastUserMessage = content;
     this.messages.update((items) => [...items, { role: 'user', content }, { role: 'assistant', content: '' }]);
     await this.submit();
+  }
+
+  // Enter sends, Shift+Enter makes a new line
+  protected onEnter(event: Event): void {
+    const key = event as KeyboardEvent;
+    if (key.shiftKey) return;
+    key.preventDefault();
+    void this.send();
   }
 
   protected async retry(): Promise<void> {
@@ -75,6 +102,15 @@ export class CustomerChat implements OnDestroy {
     });
   }
 
+  protected cancelOutage(): void {
+    this.confirmation.set(null);
+    this.messages.update((items) => {
+      // Drop the empty assistant bubble left by the paused answer, then say nothing was sent
+      const kept = items.at(-1)?.content === '' ? items.slice(0, -1) : items;
+      return [...kept, { role: 'assistant', content: 'No problem, I have not sent a report. Is there anything else I can help with?' }];
+    });
+  }
+
   protected reset(): void {
     this.abortController?.abort();
     this.abortController = undefined;
@@ -83,12 +119,7 @@ export class CustomerChat implements OnDestroy {
     this.errorMessage.set('');
     this.draft.set('');
     this.lastUserMessage = '';
-    this.messages.set([
-      {
-        role: 'assistant',
-        content: 'Hello! I can help with your account, bills, meter readings, and outage reports. What can I help you with?',
-      },
-    ]);
+    this.messages.set([{ role: 'assistant', content: this.greeting }]);
   }
 
   protected renderMarkdown(source: string): string {

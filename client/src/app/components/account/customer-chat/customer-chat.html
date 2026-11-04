@@ -1,54 +1,52 @@
-<section class="chat-page" aria-labelledby="chat-title">
-  <header class="chat-heading">
-    <div>
-      <p class="eyebrow">CUSTOMER SUPPORT</p>
-      <h1 id="chat-title">Chat with Thornton Energy</h1>
-      <p class="chat-description">Ask about your account, bills, meters, readings, or outages.</p>
-    </div>
-    <button class="reset-button" type="button" (click)="reset()">New chat</button>
-  </header>
+<header class="chat-header">
+  <span class="bot-avatar" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.6.5 1 1.1 1 1.9v.9h5.8v-.9c0-.8.4-1.4 1-1.9A6.5 6.5 0 0 0 12 2.5z"/><path d="M9.8 19.2h4.4M10.6 21.7h2.8"/><path d="M9.7 9.6c.6.9 1.4 1.4 2.3 1.4s1.7-.5 2.3-1.4"/><circle cx="10.2" cy="7.4" r=".7" fill="currentColor" stroke="none"/><circle cx="13.8" cy="7.4" r=".7" fill="currentColor" stroke="none"/></svg>
+  </span>
+  <div class="chat-title">
+    <strong id="chat-title">{{ botName }}</strong>
+    <span>Thornton Energy virtual assistant</span>
+  </div>
+  <button class="icon-button" type="button" (click)="reset()" title="Start a new chat" aria-label="Start a new chat">New</button>
+  <button class="icon-button" type="button" (click)="closed.emit()" title="Close chat" aria-label="Close chat">✕</button>
+</header>
 
-  <div class="chat-transcript" role="log" aria-live="polite" aria-label="Conversation">
-    @for (message of messages(); track $index) {
+<div class="chat-transcript" role="log" aria-live="polite" aria-labelledby="chat-title">
+  @for (message of messages(); track $index) {
+    @if (message.content || (isSending() && $last)) {
       <article class="message" [class.customer-message]="message.role === 'user'"
         [class.assistant-message]="message.role === 'assistant'">
-        <span class="message-author">{{ message.role === 'user' ? 'You' : 'Thornton Energy' }}</span>
-        <div class="message-body" [innerHTML]="renderMarkdown(message.content || (isSending() && $last ? '…' : ''))"></div>
+        <div class="message-body" [innerHTML]="renderMarkdown(message.content || '…')"></div>
       </article>
     }
-    @if (isSending()) {
-      <p class="typing-indicator" role="status">Thornton Energy is typing…</p>
-    }
-  </div>
-
-  @if (confirmation(); as outage) {
-    <section class="confirmation-card" aria-labelledby="confirm-title">
-      <h2 id="confirm-title">Confirm outage report</h2>
-      <p>Please confirm this exact report before it is sent:</p>
-      <dl>
-        <dt>Address</dt><dd>{{ outage.address }}</dd>
-        <dt>Details</dt><dd>{{ outage.description }}</dd>
-      </dl>
-      <div class="confirmation-actions">
-        <button type="button" class="confirm-button" (click)="confirmOutage()" [disabled]="isSending()">Yes, submit this report</button>
-        <button type="button" class="cancel-button" (click)="confirmation.set(null)">No, cancel</button>
-      </div>
-    </section>
   }
+</div>
 
-  @if (errorMessage()) {
-    <div class="chat-error" role="alert">
-      <span>{{ errorMessage() }}</span>
-      <button type="button" (click)="retry()" [disabled]="isSending()">Retry</button>
+@if (confirmation(); as outage) {
+  <section class="confirmation-card" aria-labelledby="confirm-title">
+    <strong id="confirm-title">Send this outage report?</strong>
+    <dl>
+      <dt>Address</dt><dd>{{ outage.address }}</dd>
+      <dt>Details</dt><dd>{{ outage.description }}</dd>
+    </dl>
+    <div class="confirmation-actions">
+      <button type="button" class="confirm-button" (click)="confirmOutage()" [disabled]="isSending()">Yes, send it</button>
+      <button type="button" class="cancel-button" (click)="cancelOutage()">No, cancel</button>
     </div>
-  }
+  </section>
+}
 
-  <form class="chat-composer" (ngSubmit)="send()">
-    <label class="visually-hidden" for="chat-message">Your message</label>
-    <textarea id="chat-message" name="message" rows="2" maxlength="8000"
-      [ngModel]="draft()" (ngModelChange)="draft.set($event)"
-      placeholder="Type your question…" [disabled]="isSending()"></textarea>
-    <button type="submit" [disabled]="isSending() || !draft().trim()">Send</button>
-  </form>
-  <p class="chat-note">Your conversation is kept only in this browser session. Do not share passwords or payment details.</p>
-</section>
+@if (errorMessage()) {
+  <div class="chat-error" role="alert">
+    <span>{{ errorMessage() }}</span>
+    <button type="button" (click)="retry()" [disabled]="isSending()">Retry</button>
+  </div>
+}
+
+<form class="chat-composer" (ngSubmit)="send()">
+  <label class="visually-hidden" for="chat-message">Your message</label>
+  <textarea id="chat-message" name="message" rows="1" maxlength="2000"
+    [ngModel]="draft()" (ngModelChange)="draft.set($event)" (keydown.enter)="onEnter($event)"
+    placeholder="Type your question…" [disabled]="isSending()"></textarea>
+  <button type="submit" [disabled]="isSending() || !draft().trim()">Send</button>
+</form>
+<p class="chat-note">Kept only in this browser tab. Please do not share passwords or card numbers.</p>

@@ -9,7 +9,6 @@
     <a routerLink="/admin" routerLinkActive="active">Admin Dashboard</a>
   } @else {
     <a routerLink="/account" routerLinkActive="active">My Account</a>
-    <a routerLink="/account/chat" routerLinkActive="active">Chat with us</a>
   }
   <span class="user-info">{{ user.email }}</span>
   <button type="button" (click)="logout()" >Logout</button>
