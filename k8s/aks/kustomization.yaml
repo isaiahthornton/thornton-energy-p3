@@ -10,5 +10,5 @@ images:
   - { name: thornton-outages,   newName: michaelgeo29/thornton-outages,   newTag: "1.0" }
   - { name: thornton-metering,  newName: michaelgeo29/thornton-metering,  newTag: "1.0" }
   - { name: thornton-messages,  newName: michaelgeo29/thornton-messages,  newTag: "1.0" }
-  - { name: thornton-chat,      newName: michaelgeo29/thornton-chat,      newTag: "1.0" }
-  - { name: thornton-web,       newName: michaelgeo29/thornton-web,       newTag: "1.0" }
+  - { name: thornton-chat,      newName: isaiahthornton/thornton-chat,      newTag: "1.1" }
+  - { name: thornton-web,       newName: isaiahthornton/thornton-web,       newTag: "1.1" }
